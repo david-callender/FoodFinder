@@ -6,7 +6,7 @@ import (
 )
 
 func getData(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, 4+5)
+	c.IndentedJSON(http.StatusOK, "some data")
 }
 
 func main() {
