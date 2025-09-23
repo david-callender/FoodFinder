@@ -26,3 +26,20 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 -   Run `bun lint` to lint your code for common issues.
 -   Run `bun format` to format your code.
+
+## Backend
+
+### Stack
+
+-   Language [Go](https://go.dev/)
+-   API [Gin](https://github.com/gin-gonic/gin)
+
+### Getting started
+
+-   Install Go.
+-   Run `go get .` to install packages.
+-   Run `go run .` to start the server.
+
+### Before you push
+
+-   Run `go fmt .` format your code.
