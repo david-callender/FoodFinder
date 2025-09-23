@@ -38,7 +38,8 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 -   Install Go.
 -   Run `go get .` to install packages.
--   Run `go run .` to start the server.
+-   Run `go install github.com/air-verse/air@latest` to install air.
+-   Run `air` to start the dev server.
 
 ### Before you push
 
