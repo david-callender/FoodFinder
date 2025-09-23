@@ -17,7 +17,12 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 ### Getting started
 
--   Install bun
--   Run `bun install` to install all required packages
--   Run `bun pm trust --all` to trust installed packages
--   Run `bun dev` to start the dev server
+-   Install bun.
+-   Run `bun install` to install all required packages.
+-   Run `bun pm trust --all` to trust installed packages.
+-   Run `bun dev` to start the dev server.
+
+### Before you push
+
+-   Run `bun lint` to lint your code for common issues.
+-   Run `bun format` to format your code.
