@@ -3,44 +3,34 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	_ "modernc.org/sqlite"
+	"github.com/joho/godotenv"
 )
 
-// Here starts the AUTH functions
-// ----------------------PRIVATE KEYS----------------------
-var jwt_access_key = []byte("supersecretaccesskey")
-var jwt_refresh_key = []byte("supersecretrefreshkey")
-
-// --------------------------------------------------------
-
+// GLOABL VAR STORAGE
 type Server struct {
 	DB *sql.DB
 }
 
 // open/create SQLite and ensure schema
-func openDB() (*sql.DB, error) {
-	db, err := sql.Open("sqlite", "file:app.db?_busy_timeout=5000")
-	if err != nil {
-		return nil, err
-	}
-
-	schema := `
-		CREATE TABLE IF NOT EXISTS users(
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			uuid TEXT NOT NULL UNIQUE,
-			username TEXT NOT NULL UNIQUE,
-			password_hash TEXT NOT NULL,
-			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-	);`
-	if _, err := db.Exec(schema); err != nil {
-		return nil, err
-	}
+func connectDB() (string, error) {
+	db := "it worked"
 	return db, nil
+}
+
+func FindOneUserByID(db *sql.DB, id string) (string, error) {
+
+	return "user data", nil
+}
+
+func UpdateOneUserById(db *sql.DB, id string) (string, error) {
+	return "update user succesful", nil
 }
 
 func generateToken(username string, userid string) (string, string, error) {
@@ -49,21 +39,23 @@ func generateToken(username string, userid string) (string, string, error) {
 	// 			  userid: string (account id in SQL database)
 	// Return: access_token: string (access key to store in browser local storage)
 	//		   refresh_token: string (this will get stored in the http cookies)
+
+	right_now := time.Now()
 	access_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"sub":      userid,
-		"iat":      time.Now().Unix(),
-		"exp":      time.Now().Add(time.Minute * 7).Unix(), // expires in 7 minutes
+		"iat":      right_now.Unix(),
+		"exp":      right_now.Add(time.Minute * 7).Unix(), // expires in 7 minutes
 	})
 	refresh_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"sub":      userid,
-		"iat":      time.Now().Unix(),
-		"exp":      time.Now().Add(time.Hour * 24 * 10).Unix(), // expires in 10 days
+		"iat":      right_now.Unix(),
+		"exp":      right_now.Add(time.Hour * 24 * 10).Unix(), // expires in 10 days
 	})
 
-	sign_access, err1 := access_token.SignedString(jwt_access_key)
-	sign_refresh, err2 := refresh_token.SignedString(jwt_refresh_key)
+	sign_access, err1 := access_token.SignedString([]byte(os.Getenv("access_key")))
+	sign_refresh, err2 := refresh_token.SignedString([]byte(os.Getenv("refresh_key")))
 
 	if err1 != nil {
 		return "", "", err1
@@ -101,66 +93,57 @@ func verifyToken(tokenString string, secretKey []byte) error {
 
 // Endpoint functions here
 
-func (s *Server) Refresh(c *gin.Context) {
-	// Method: POST
+func RefreshCookieTemplate(c *gin.Context, username string, uid string) (string, error) {
 
-	refresh_cookie, err1 := c.Cookie("refresh_token")
-	if err1 != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "no cookie found!"})
-		return
-	}
-	fmt.Println(refresh_cookie)
-	// verify signature
-	err2 := verifyToken(refresh_cookie, jwt_refresh_key)
-	if err2 != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid cookie"})
-		return
-	}
-
-	// parse claims to extract uid/username
-	tok, err := jwt.Parse(refresh_cookie, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return jwt_refresh_key, nil
-	})
-	if err != nil || !tok.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid cookie"})
-		return
-	}
-	claims, ok := tok.Claims.(jwt.MapClaims)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid claims"})
-		return
-	}
-
-	uid, _ := claims["sub"].(string)
-	username, _ := claims["username"].(string)
-
-	// optional: ensure user still exists
-	var exists int
-	_ = s.DB.QueryRow(`SELECT 1 FROM users WHERE uuid = ?`, uid).Scan(&exists)
-	if exists != 1 {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "user not found"})
-		return
-	}
-
-	// issue new tokens and rotate cookie
-	access, new_refresh, err := generateToken(username, uid)
+	access, refresh, err := generateToken(username, uid)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token gen failed"})
-		return
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
+		return "", err
 	}
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refresh_token",
-		Value:    new_refresh,
+		Value:    refresh,
 		Path:     "/",
 		MaxAge:   int((10 * 24 * time.Hour).Seconds()),
 		HttpOnly: true,
-		Secure:   false, // set true on HTTPS
+		Secure:   false, // set true in HTTPS
 		SameSite: http.SameSiteLaxMode,
 	})
+
+	return access, err
+}
+
+func (s *Server) Refresh(c *gin.Context) {
+	// Method: POST
+
+	jwt_refresh_key := []byte(os.Getenv("refresh_key"))
+
+	refresh_cookie, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "no cookie found!"})
+		return
+	}
+	fmt.Println(refresh_cookie)
+
+	err = verifyToken(refresh_cookie, jwt_refresh_key)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token vefication failed"})
+		return
+	}
+
+	// DO SQL STUFF HERE YO
+
+	// END OF SQL
+
+	username := "test"
+	uid := "1"
+	access, err := RefreshCookieTemplate(c, username, uid)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"access_token": access})
 }
@@ -172,51 +155,29 @@ func (s *Server) Login(c *gin.Context) {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&login_account); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username and password required"})
-		return
-	}
 
-	// look up user by username
-	var storedHash string
-	var uid string
-	err := s.DB.QueryRow(`SELECT uuid, password_hash FROM users WHERE username = ?`, login_account.Username).Scan(&uid, &storedHash)
-	if err == sql.ErrNoRows {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
-		return
-	}
+	err := c.ShouldBindJSON(&login_account)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "username and password required"})
 		return
 	}
 
-	// NOTE: your current Register stores plain passwords in password_hash.
-	// So compare directly. (Switch to bcrypt later.)
-	if storedHash != login_account.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
-		return
-	}
+	// DO SQL STUFF HERE YO
 
-	// issue tokens
-	access, refresh, err := generateToken(login_account.Username, uid)
+	// END OF SQL
+
+	username := "test"
+	uid := "1"
+	access, err := RefreshCookieTemplate(c, username, uid)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
 		return
 	}
-
-	// set refresh cookie (HttpOnly)
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refresh,
-		Path:     "/",
-		MaxAge:   int((10 * 24 * time.Hour).Seconds()),
-		HttpOnly: true,
-		Secure:   false, // set true in HTTPS
-		SameSite: http.SameSiteLaxMode,
-	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token": access,
+		"detail":       "login success",
 		"user":         gin.H{"uuid": uid, "username": login_account.Username},
 	})
 }
@@ -228,35 +189,22 @@ func (s *Server) Register(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&register_account); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username and password required"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "username and password required"})
 		return
 	}
 
-	// Insert into DB
-	_, err := s.DB.Exec(`INSERT INTO users(uuid, username, password_hash) VALUES(?, ?, ?)`,
-		register_account.Username, register_account.Username, register_account.Password)
+	// DO SQL STUFF HERE YO
+
+	// END OF SQL
+
+	username := "test"
+	uid := "1"
+	access, err := RefreshCookieTemplate(c, username, uid)
+
 	if err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "username already exists or insert failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
 		return
 	}
-
-	// Generate tokens using the stored "uuid" (currently same as username)
-	access, refresh, err := generateToken(register_account.Username, register_account.Username)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "token gen failed"})
-		return
-	}
-
-	// Set refresh cookie (HttpOnly)
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refresh,
-		Path:     "/",
-		MaxAge:   int((10 * 24 * time.Hour).Seconds()),
-		HttpOnly: true,
-		Secure:   false, // set true in HTTPS
-		SameSite: http.SameSiteLaxMode,
-	})
 
 	c.JSON(http.StatusCreated, gin.H{
 		"detail":       "register success",
@@ -265,60 +213,24 @@ func (s *Server) Register(c *gin.Context) {
 	})
 }
 
-func (s *Server) getData(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"detail": "hello world"})
-}
+func main() {
 
-// used to test functions in deveoplment
-func Test() {
-	access, refresh, err1 := generateToken("test", "123")
-
-	if err1 != nil {
-		fmt.Println("token generation fail:", err1)
+	env_err := godotenv.Load()
+	if env_err != nil {
+		log.Fatal("Error loading .env file")
 		return
 	}
 
-	fmt.Println("ACCESS_TOKEN:", access)
-	fmt.Println("REFRESH_TOKEN:", refresh)
-
-	err2 := verifyToken(access, jwt_access_key)
-	err3 := verifyToken(refresh, jwt_refresh_key)
-
-	if err2 != nil {
-		fmt.Println("access token fail:", err1)
-	} else {
-		fmt.Println("ACCESS IS VAILD!")
-	}
-
-	if err3 != nil {
-		fmt.Println("refresh token fail:", err2)
-	} else {
-		fmt.Println("REFRESH IS VAILD!")
-	}
-
-	fmt.Println("code is done")
-
-}
-
-func main() {
-
-	// Test()
-	// return
-
-	// some database shit not my cup of tea yet
-	db, err := openDB()
+	// connect to the database
+	_, err := connectDB()
 	if err != nil {
-		panic(err)
+		fmt.Println("")
+		return
 	}
-	defer db.Close()
 
-	s := &Server{DB: db}
+	s := &Server{DB: nil}
 
 	router := gin.Default()
-
-	// Method: GET
-	// Purpose: testing
-	router.GET("/getData", s.getData)
 
 	// Method: POST
 	// Purpose: to refresh jwt token for http and browser
