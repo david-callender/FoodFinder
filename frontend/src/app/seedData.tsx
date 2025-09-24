@@ -1,4 +1,4 @@
-import type { MenuProp, MenuProps } from "./page";
+import type { MenuProp, MenuProps } from "./components/Menu/Menu";
 
 // sample data for display
 

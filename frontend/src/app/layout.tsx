@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
+// css for header
+import "./header.css";
 
 import type { Metadata } from "next";
 import type { FC } from "react";
