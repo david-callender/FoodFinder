@@ -7,19 +7,17 @@ import "./menu.css";
 import type { FC } from "react";
 
 // type for menu item
-export type MenuProp = {
-  MenuItem: string;
+export type MenuItem = {
+  meal: string;
   key?: number;
   location?: string;
 };
 
-// type for collection of menu items
-// need so we can pass into a component
-export type MenuProps = {
-  items: MenuProp[];
+type Props = {
+  items: MenuItem[];
 };
 
-export const Menu: FC<MenuProps> = ({ items }: MenuProps) => {
+export const Menu: FC<Props> = ({ items }) => {
   // Description : Table for menu items. Iterates through items and generates a row.
   // Args:
   // items : string[]
@@ -35,12 +33,12 @@ export const Menu: FC<MenuProps> = ({ items }: MenuProps) => {
         </thead>
 
         <tbody>
-          {items.map((item: MenuProp) => (
+          {items.map((item: MenuItem) => (
             <tr key={item.key}>
-              <td className="menu-item">{item.MenuItem}</td>
+              <td className="menu-item">{item.meal}</td>
               <td className="menu-item">{item.location}</td>
               <td className="menu-item">
-                <LikeButton MenuItem={item.MenuItem} />
+                <LikeButton item={item} />
               </td>
             </tr>
           ))}

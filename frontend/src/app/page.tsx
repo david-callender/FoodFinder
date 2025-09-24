@@ -14,7 +14,7 @@ const Home: FC = () => {
   // TODO : make api calls here to construct menu list
   // this is only temporary data
 
-  return <Menu items={MenuItems.items} />;
+  return <Menu items={MenuItems} />;
 };
 
 export default Home;
