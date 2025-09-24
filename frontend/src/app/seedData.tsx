@@ -1,5 +1,7 @@
 import type { MenuProp, MenuProps } from "./page";
 
+// sample data for display
+
 const item1: MenuProp = {
   MenuItem: "Apples",
   key: 5,
