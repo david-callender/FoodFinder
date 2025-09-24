@@ -30,6 +30,7 @@ const RootLayout: FC<Props> = ({ children }) => {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <h1 className="title">DineOnCampus</h1>
         {children}
       </body>
     </html>

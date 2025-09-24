@@ -19,6 +19,24 @@
   }
 }
 
+h1.title {
+  text-align: center;
+  font-size: xx-large;
+}
+table.menu {
+  margin: 50px;
+}
+div.menu {
+  display: flex;
+  justify-content: center;
+}
+
+td.menu-item {
+  padding: 10px;
+  border: green dash;
+  border-width: thin;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
