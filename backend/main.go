@@ -18,6 +18,9 @@ type Server struct {
 	DB *sql.DB
 }
 
+const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
+const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
+
 // open/create SQLite and ensure schema
 func connectDB() (string, error) {
 	db := "it worked"
@@ -41,20 +44,18 @@ func generateToken(username string, userid string) (string, string, error) {
 	//		   refresh_token: string (this will get stored in the http cookies)
 
 	creation_time := time.Now()
-	exp_access_token := creation_time.Add(time.Minute * 7)      // expires in 7 minutes
-	exp_refresh_token := creation_time.Add(time.Hour * 24 * 10) // expires in 10 days
 
 	access_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"sub":      userid,
 		"iat":      creation_time.Unix(),
-		"exp":      exp_access_token.Unix(),
+		"exp":      creation_time.Add(ACCESS_TOKEN_KEEPALIVE).Unix(),
 	})
 	refresh_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"sub":      userid,
 		"iat":      creation_time.Unix(),
-		"exp":      exp_refresh_token.Unix(),
+		"exp":      creation_time.Add(REFRESH_TOKEN_KEEPALIVE).Unix(),
 	})
 
 	sign_access, err1 := access_token.SignedString([]byte(os.Getenv("access_key")))
@@ -104,7 +105,7 @@ func RefreshCookieTemplate(c *gin.Context, username string, uid string) (string,
 		return "", err
 	}
 
-	exp_time := int((10 * 24 * time.Hour).Seconds()) // expires in 10 days
+	exp_time := int((REFRESH_TOKEN_KEEPALIVE).Seconds())
 
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refresh_token",
