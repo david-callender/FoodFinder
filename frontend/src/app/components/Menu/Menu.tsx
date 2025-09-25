@@ -1,7 +1,6 @@
 import { LikeButton } from "../LikeButton/LikeButton";
 
 // css for menu
-import "./menu.css";
 
 // components must be of shape FC
 import type { FC } from "react";
@@ -23,8 +22,8 @@ export const Menu: FC<Props> = ({ items }) => {
   // items : string[]
 
   return (
-    <div className="menu">
-      <table className="menu">
+    <div className="flex justify-center">
+      <table className="self-center rounded-xl border border-white">
         <thead>
           <tr>
             <th>food</th>
@@ -35,9 +34,9 @@ export const Menu: FC<Props> = ({ items }) => {
         <tbody>
           {items.map((item: MenuItem) => (
             <tr key={item.key}>
-              <td className="menu-item">{item.meal}</td>
-              <td className="menu-item">{item.location}</td>
-              <td className="menu-item">
+              <td className="p-5">{item.meal}</td>
+              <td className="p-5">{item.location}</td>
+              <td className="p-5">
                 <LikeButton item={item} />
               </td>
             </tr>

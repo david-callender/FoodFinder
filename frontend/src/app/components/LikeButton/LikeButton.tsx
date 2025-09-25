@@ -5,7 +5,6 @@ import { useState } from "react";
 // needed for image
 // should be storing these images in db?
 import filled_heart from "./filled.png";
-import "./LikeButton.css";
 import unfilled_heart from "./unfilled.png";
 
 import type { MenuItem } from "../Menu/Menu";

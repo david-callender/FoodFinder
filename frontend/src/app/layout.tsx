@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 // css for header
-import "./header.css";
 
 import type { Metadata } from "next";
 import type { FC } from "react";
@@ -32,7 +31,7 @@ const RootLayout: FC<Props> = ({ children }) => {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <h1 className="title">DineOnCampus</h1>
+        <h1 className="text-center text-4xl">DineOnCampus</h1>
         {children}
       </body>
     </html>
