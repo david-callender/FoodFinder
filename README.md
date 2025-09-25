@@ -34,6 +34,14 @@ access to the repository, email your github username to `calle159@umn.edu`.
 -   Language [Go](https://go.dev/)
 -   API [Gin](https://github.com/gin-gonic/gin)
 
+## Environment Variables
+
+Create a `.env` file in the root of the repository with the following values:
+
+# Backend
+-   access_key=YOUR-KEY
+-   refresh_key=YOUR-KEY
+
 ### Getting started
 
 -   Install Go.
