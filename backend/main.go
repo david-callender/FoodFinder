@@ -40,18 +40,21 @@ func generateToken(username string, userid string) (string, string, error) {
 	// Return: access_token: string (access key to store in browser local storage)
 	//		   refresh_token: string (this will get stored in the http cookies)
 
-	right_now := time.Now()
+	creation_time := time.Now()
+	exp_access_token := creation_time.Add(time.Minute * 7)      // expires in 7 minutes
+	exp_refresh_token := creation_time.Add(time.Hour * 24 * 10) // expires in 10 days
+
 	access_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"sub":      userid,
-		"iat":      right_now.Unix(),
-		"exp":      right_now.Add(time.Minute * 7).Unix(), // expires in 7 minutes
+		"iat":      creation_time.Unix(),
+		"exp":      exp_access_token.Unix(),
 	})
 	refresh_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"sub":      userid,
-		"iat":      right_now.Unix(),
-		"exp":      right_now.Add(time.Hour * 24 * 10).Unix(), // expires in 10 days
+		"iat":      creation_time.Unix(),
+		"exp":      exp_refresh_token.Unix(),
 	})
 
 	sign_access, err1 := access_token.SignedString([]byte(os.Getenv("access_key")))
@@ -101,11 +104,13 @@ func RefreshCookieTemplate(c *gin.Context, username string, uid string) (string,
 		return "", err
 	}
 
+	exp_time := int((10 * 24 * time.Hour).Seconds()) // expires in 10 days
+
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    refresh,
 		Path:     "/",
-		MaxAge:   int((10 * 24 * time.Hour).Seconds()),
+		MaxAge:   exp_time,
 		HttpOnly: true,
 		Secure:   false, // set true in HTTPS
 		SameSite: http.SameSiteLaxMode,
@@ -124,7 +129,6 @@ func (s *Server) Refresh(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"detail": "no cookie found!"})
 		return
 	}
-	fmt.Println(refresh_cookie)
 
 	err = verifyToken(refresh_cookie, jwt_refresh_key)
 	if err != nil {
@@ -224,7 +228,7 @@ func main() {
 	// connect to the database
 	_, err := connectDB()
 	if err != nil {
-		fmt.Println("")
+		fmt.Println("database failed to initalize")
 		return
 	}
 
@@ -244,7 +248,7 @@ func main() {
 	router.POST("/register", s.Register)
 
 	// Method: POST
-	// Purpose: users can loginto their accounts
+	// Purpose: users can login to their accounts
 	// Arguments:
 	//	username: string,
 	//	password: string
