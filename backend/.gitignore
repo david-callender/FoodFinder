@@ -20,6 +20,10 @@ profile.cov
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# SQLite database
+*.db
+*.db-journal
+
 # Go workspace file
 go.work
 go.work.sum
