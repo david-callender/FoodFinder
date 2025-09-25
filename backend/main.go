@@ -21,7 +21,6 @@ type Server struct {
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
 const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
-// open/create SQLite and ensure schema
 func connectDB() (string, error) {
 	db := "it worked"
 	return db, nil
