@@ -1,9 +1,9 @@
-// for state management in components
 import Image from "next/image";
+// for state management in components
 import { useState } from "react";
 
 // needed for image
-// should be storing these images in db?
+// TODO: should be storing these images in db?
 import filled_heart from "./filled.png";
 import unfilled_heart from "./unfilled.png";
 

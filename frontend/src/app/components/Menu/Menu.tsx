@@ -1,7 +1,5 @@
 import { LikeButton } from "../LikeButton/LikeButton";
 
-// css for menu
-
 // components must be of shape FC
 import type { FC } from "react";
 
