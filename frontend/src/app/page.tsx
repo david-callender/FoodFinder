@@ -1,9 +1,3 @@
-// converts components to client components
-// necessary for client interactivity
-// specifically the like button, in this case
-// TODO: figure out if this is necessary for the scope of the entire page
-"use client";
-
 import { Menu } from "../components/Menu/Menu";
 
 import { MenuItems } from "./seedData";
