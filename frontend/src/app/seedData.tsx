@@ -1,4 +1,4 @@
-import type { MenuItem } from "./components/Menu/Menu";
+import type { MenuItem } from "../components/Menu/Menu";
 
 // sample data for display
 
