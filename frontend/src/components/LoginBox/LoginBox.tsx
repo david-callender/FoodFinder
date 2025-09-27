@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 
 import type { FC, FormEvent } from "react";
-import { json } from "stream/consumers";
+
+type User = {
+  access_token: string;
+};
 
 export const LoginBox: FC = () => {
   // Description: email/password text field and login button w/ redirect
@@ -13,14 +16,16 @@ export const LoginBox: FC = () => {
   // use for redirects
   const router = useRouter();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ): Promise<void> {
     // prevents refresh of page
     event.preventDefault();
 
     // pulling form data
     const formData = new FormData(event.currentTarget);
-    const email = formData.get('email');
-    const password = formData.get('password');
+    const email = formData.get("email");
+    const password = formData.get("password");
 
     // TODO: input validation
 
@@ -35,23 +40,25 @@ export const LoginBox: FC = () => {
 
     // FIX: Static URL
     // request to login endpoint
-    const response = await fetch('http://localhost:8080/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("http://localhost:8080/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: email, password: password }),
-    })
+    });
 
     // redirect to home page
-    if (response.ok){
-     
-        let userInfo = await response.json();
-        // storing access token
-        localStorage.setItem("access_token", userInfo.access_token);
-        router.push("/");
+    if (response.ok) {
+      // casting transforms json -> User
+      // explcitly typing responseJson as User would
+      // mean I assume the json is of a specific type
+      const responseJson = (await response.json()) as User;
+
+      // storing access token
+      localStorage.setItem("access_token", responseJson.access_token);
+      router.push("/");
     } else {
-        console.log(await response.json())
+      console.log(await response.json());
     }
-   
   }
 
   return (
