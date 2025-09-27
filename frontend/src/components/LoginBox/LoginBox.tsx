@@ -1,14 +1,34 @@
 "use client";
 
-import type { FC } from "react";
+import { useRouter } from "next/navigation";
 
-// would it make more sense to keep components in respective page directory?
+import type { FC, FormEvent } from "react";
 
 export const LoginBox: FC = () => {
+  // Description: email/password text field and login button w/ redirect
   const textInputClass =
     "bg-gray-200 place-self-center border-4 p-0.5 m-2 rounded-lg text-black";
+
+  // use for redirects
+  const router = useRouter();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+    // prevents refresh of page
+    event.preventDefault();
+
+    // for use later
+    // const formData = new FormData(event.currentTarget);
+    // const email = formData.get('email');
+    // const password = formData.get('password');
+
+    // handle authentication here
+
+    // redirect to home page
+    router.push("/");
+  }
+
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <div className="m-20 flex flex-auto flex-col p-5">
         <input
           type="email"
