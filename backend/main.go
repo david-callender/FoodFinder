@@ -11,6 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+	// cors handling later
+	"github.com/gin-contrib/cors"
+
 )
 
 // GLOABL VAR STORAGE
@@ -235,6 +238,16 @@ func main() {
 	s := &Server{DB: nil}
 
 	router := gin.Default()
+
+	// handle CORS requests for testing. How to avoid? Stolen from Chatgpt.
+    router.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"http://localhost:3000"}, // Next.js origin
+        AllowMethods:     []string{"POST", "GET", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+        MaxAge:           12 * time.Hour,
+    }))
 
 	// Method: POST
 	// Purpose: to refresh jwt token for http and browser
