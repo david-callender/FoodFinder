@@ -16,7 +16,7 @@ type Props = {
 
 export const Menu: FC<Props> = ({ items }) => {
   // Description : Table for menu items. Iterates through items and generates a row.
-  // Args:
+  // Args: MenuItem[]
   // items : string[]
 
   return (
@@ -41,6 +41,7 @@ export const Menu: FC<Props> = ({ items }) => {
           ))}
         </tbody>
       </table>
+      <button></button>
     </div>
   );
 };

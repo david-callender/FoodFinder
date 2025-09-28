@@ -40,10 +40,8 @@ export const LikeButton: FC<Props> = ({ item }) => {
     >
       <Image
         src={filled_heart}
-        height={50}
-        width={50}
         alt="filled heart"
-        className="transition duration-150 active:scale-90"
+        className="w-15 transition duration-150 active:scale-90"
       />
     </button>
   );
@@ -57,10 +55,8 @@ export const LikeButton: FC<Props> = ({ item }) => {
     >
       <Image
         src={unfilled_heart}
-        height={50}
-        width={50}
         alt="unfilled heart"
-        className="transition duration-150 active:scale-90"
+        className="w-15 transition duration-150 active:scale-90"
       />
     </button>
   );

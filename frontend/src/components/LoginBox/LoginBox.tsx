@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 import type { FC, FormEvent } from "react";
 
+// for casting when fetching from api
 type User = {
   access_token: string;
 };
@@ -42,25 +43,27 @@ export const LoginBox: FC = () => {
     // request to login endpoint
     const response = await fetch("http://localhost:8080/login", {
       method: "POST",
+      credentials: "include", // need this for receive cookies w/ cors
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: email, password: password }),
     });
 
-    // redirect to home page
     if (response.ok) {
       // casting transforms json -> User
       // explcitly typing responseJson as User would
       // mean I assume the json is of a specific type
       const responseJson = (await response.json()) as User;
 
-      // storing access token
+      // store access_token in local storage
       localStorage.setItem("access_token", responseJson.access_token);
+      // redirect
       router.push("/");
     } else {
       console.log(await response.json());
     }
   }
 
+  // final login box component
   return (
     <form onSubmit={handleSubmit}>
       <div className="m-20 flex flex-auto flex-col p-5">
