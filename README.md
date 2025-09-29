@@ -38,7 +38,7 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 Create a `.env` file in the root of the repository with the following values:
 
-# Backend
+-   db_url=YOUR-URL-FOR-POSTGRESQL
 -   access_key=YOUR-KEY
 -   refresh_key=YOUR-KEY
 
