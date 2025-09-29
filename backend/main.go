@@ -249,14 +249,14 @@ func (s *Server) Refresh(c *gin.Context) {
 
 	// DO SQL STUFF HERE YO
 
-	email, ok := token_data["email"].(string)
-	uid, ok := token_data["sub"].(string)
+	email, ok1 := token_data["email"].(string)
+	uid, ok2 := token_data["sub"].(string)
 
-	if !ok {
+	if !ok1 {
 		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload (email)"})
 		return
 	}
-	if !ok {
+	if !ok2 {
 		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload (sub)"})
 		return
 	}
