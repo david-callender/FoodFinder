@@ -11,8 +11,6 @@ type User = {
 
 export const LoginBox: FC = () => {
   // Description: email/password text field and login button w/ redirect
-  const textInputClass =
-    "bg-gray-200 place-self-center border-4 p-0.5 m-2 rounded-lg text-black";
 
   // use for redirects
   const router = useRouter();
@@ -37,12 +35,15 @@ export const LoginBox: FC = () => {
 
     // request to login endpoint
     // refresh_token cookie is set here
-    const response = await fetch(new URL("/login",process.env.NEXT_PUBLIC_BACKEND_URL), {
-      method: "POST",
-      credentials: "include", // need this for receive cookies w/ cors
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: email, password: password }),
-    });
+    const response = await fetch(
+      new URL("/login", process.env.NEXT_PUBLIC_BACKEND_URL),
+      {
+        method: "POST",
+        credentials: "include", // need this for receive cookies w/ cors
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: email, password: password }),
+      }
+    );
 
     if (response.ok) {
       // casting to known type w/ known fields
@@ -65,14 +66,14 @@ export const LoginBox: FC = () => {
           type="email"
           name="email"
           placeholder="Email"
-          className={textInputClass}
+          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
           required
         />
         <input
           type="password"
           name="password"
           placeholder="Password"
-          className={textInputClass}
+          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
           required
         />
         <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
