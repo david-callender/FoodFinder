@@ -8,7 +8,6 @@ import type { FC } from "react";
 const Home: FC = () => {
   // TODO : make api calls here to construct menu list
   // this is only temporary data
-
   return <Menu items={MenuItems} />;
 };
 
