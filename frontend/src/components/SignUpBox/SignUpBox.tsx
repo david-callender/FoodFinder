@@ -69,6 +69,9 @@ export const SignUpBox: FC = () => {
         <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
           Sign Up!
         </button>
+        <p className="m-2 place-self-center text-xs">
+          Already have an account? <a href="/login">Login Here</a>
+        </p>
       </div>
     </form>
   );

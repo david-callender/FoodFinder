@@ -79,6 +79,9 @@ export const LoginBox: FC = () => {
         <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
           login
         </button>
+        <p className="m-2 place-self-center text-xs">
+          Don&apos;t have an account? <a href="/signup">Sign Up Here</a>
+        </p>
       </div>
     </form>
   );
