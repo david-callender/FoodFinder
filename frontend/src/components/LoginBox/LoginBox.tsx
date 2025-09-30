@@ -35,10 +35,9 @@ export const LoginBox: FC = () => {
     // update this to a redirect (?) for registration
     // if login fails
 
-    // FIX: Static URL
     // request to login endpoint
     // refresh_token cookie is set here
-    const response = await fetch("http://localhost:8080/login", {
+    const response = await fetch(new URL("/login",process.env.NEXT_PUBLIC_BACKEND_URL), {
       method: "POST",
       credentials: "include", // need this for receive cookies w/ cors
       headers: { "Content-Type": "application/json" },
