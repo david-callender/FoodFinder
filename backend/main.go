@@ -11,8 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
-	// cors handling later
-	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/cors"	// cors handling later
 )
 
 // GLOABL VAR STORAGE

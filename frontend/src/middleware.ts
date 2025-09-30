@@ -1,10 +1,13 @@
-import { NextResponse } from "next/server";
+// jose runs in the "edge runtime"
+// which basically means it runs closer to the browser level
+// this is needed in middleware because middleware is working
+// more "barebones" so to speak with requests, etc. BEFORE any rendering
+import { jwtVerify } from "jose";
 
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// make sure they have some key.
-// real authentication will happen within the api routes
-function authenticate(refresh_token: string | undefined): boolean {
+async function authenticate(refresh_token: string | undefined): Promise<boolean> {
   // Description: shallow authentication to ensure a user has a refresh token
   // args: refresh_token -- users refresh token
   // returns: boolean : false if lacking refresh token, true otherwise
@@ -12,16 +15,30 @@ function authenticate(refresh_token: string | undefined): boolean {
   if (refresh_token === undefined || refresh_token === "") {
     return false;
   }
-  return true;
+  // need to encode secret for verification
+  // Per chatgpt: jose is built on WEB Crypto API, the only library available for edge runtime.
+  // this library requires secret keys to be encoded
+  const refresh_secret = new TextEncoder().encode(process.env.refresh_key?.trim());
+
+  try {
+    const { payload } = await jwtVerify(refresh_token, refresh_secret);
+    console.log(payload)
+  
+    return true;
+  } catch (error: any) {
+    console.log(error);
+    return false;
+  }
+  
 }
 
-export function middleware(request: NextRequest): NextResponse | undefined {
+export async function middleware(request: NextRequest) {
   // Description:
   // args: request: incoming request
   // returns: NextResponse | undefined : either a redirect or allows the response through, unmodified
 
   // verifys if you have a token
-  const authenticated = authenticate(
+  const authenticated = await authenticate(
     request.cookies.get("refresh_token")?.value
   );
 

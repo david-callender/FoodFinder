@@ -30,17 +30,14 @@ export const LoginBox: FC = () => {
 
     // TODO: input validation
 
-    // handling authentication
-
     // 9/27: endpoint currently assumes all users are valid.
     // At some point, when validation is implemented,
     // update this to a redirect (?) for registration
     // if login fails
 
-    // how to get refresh token?
-
     // FIX: Static URL
     // request to login endpoint
+    // refresh_token cookie is set here
     const response = await fetch("http://localhost:8080/login", {
       method: "POST",
       credentials: "include", // need this for receive cookies w/ cors
@@ -49,9 +46,7 @@ export const LoginBox: FC = () => {
     });
 
     if (response.ok) {
-      // casting transforms json -> User
-      // explcitly typing responseJson as User would
-      // mean I assume the json is of a specific type
+      // casting to known type w/ known fields
       const responseJson = (await response.json()) as User;
 
       // store access_token in local storage

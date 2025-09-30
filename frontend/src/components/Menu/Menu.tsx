@@ -7,7 +7,7 @@ import type { FC } from "react";
 export type MenuItem = {
   key: number;
   meal: string;
-  location?: string;
+  location: string;
 };
 
 type Props = {
