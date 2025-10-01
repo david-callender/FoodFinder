@@ -122,21 +122,30 @@ func GetLocationIdByName(buildingName, locationName, siteId string) (string, err
 	return locationId, nil
 }
 
-// GetMenu(buildingName, locationName, periodName, site (strings), date (time)): 
+// GetMenuByName(buildingName, locationName, periodName, site (strings), date (time)): 
 // Takes the name of a building, the name of a location within the building,
 // a named meal period ("breakfast", "lunch", "dinner", or "everyday"), a
 // dineoncampus site ID, and a time.Time representing the current date. 
 // Returns a Menu populated with the options from dineoncampus. Names are
 // case-insensitive.
-func GetMenu(buildingName, locationName, periodName, siteId string, date time.Time) (Menu, error) {
+func GetMenuByName(buildingName, locationName, periodName, siteId string, date time.Time) (Menu, error) {
+	locationId, err := GetLocationIdByName(buildingName, locationName, siteId)
+	if err != nil {
+		return Menu{}, err
+	}
+
+	return GetMenuById(locationId, periodName, date)
+}
+
+// GetMenuById(locationId, periodName (strings), date (time.Time)): Takes the
+// ID of a food location (NOT A BUILDING), a named meal period, and a time.Time
+// representing a calendar date. Returns a Menu populated with the options from
+// dineoncampus.
+func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 	var menu Menu
 	var periodId string
 
 	dateFormatted := date.Format("2006-01-02")
-	locationId, err := GetLocationIdByName(buildingName, locationName, siteId)
-	if err != nil {
-		return menu, err
-	}
 	periodIds, err := getPeriodIds(locationId, date)
 	if err != nil {
 		return menu, err
@@ -190,7 +199,6 @@ func GetMenu(buildingName, locationName, periodName, siteId string, date time.Ti
 
 	return menu, nil
 }
-
 // NON-EXPORTED FUNCTIONS: MAY NOT BE USED BY IMPORTING MODULES
 
 // getPeriodIds(locationId, date): takes a dining hall location ID and returns
