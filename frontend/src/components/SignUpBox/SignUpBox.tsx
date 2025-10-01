@@ -20,6 +20,7 @@ export const SignUpBox: FC = () => {
     const phoneNumber = formData.get("phone-number");
 
     // TODO: accept phoneNumber at /register endpoint
+    // remember to handle empty string phone numbers
     console.log(phoneNumber);
     // TODO: input validation
 
@@ -34,6 +35,8 @@ export const SignUpBox: FC = () => {
         body: JSON.stringify({ username: email, password: password }),
       }
     );
+
+    // TODO : Handling a "user exists" error from backend
 
     if (response.ok) {
       router.push("/");
@@ -64,13 +67,16 @@ export const SignUpBox: FC = () => {
           className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
           name="phone-number"
           placeholder="XXX-XXX-XXXX"
-          pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+          pattern="[0-9]{3}[0-9]{3}[0-9]{4}"
         />
         <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
           Sign Up!
         </button>
         <p className="m-2 place-self-center text-xs">
-          Already have an account? <a href="/login">Login Here</a>
+          Already have an account?{" "}
+          <a href="/login" className="text-blue-400">
+            Login Here
+          </a>
         </p>
       </div>
     </form>

@@ -61,7 +61,7 @@ export const LoginBox: FC = () => {
   // final login box component
   return (
     <form onSubmit={handleSubmit}>
-      <div className="m-20 flex flex-auto flex-col p-5">
+      <div className="flex flex-col p-5">
         <input
           type="email"
           name="email"
@@ -80,7 +80,10 @@ export const LoginBox: FC = () => {
           login
         </button>
         <p className="m-2 place-self-center text-xs">
-          Don&apos;t have an account? <a href="/signup">Sign Up Here</a>
+          Don&apos;t have an account?{" "}
+          <a href="/signup" className="text-blue-400">
+            Sign Up Here
+          </a>
         </p>
       </div>
     </form>
