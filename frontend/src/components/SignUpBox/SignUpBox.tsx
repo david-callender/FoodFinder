@@ -19,12 +19,24 @@ export const SignUpBox: FC = () => {
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email");
     const password = formData.get("password");
-    const phoneNumber = formData.get("phone-number");
+
+    // hack-y solution for now. Because the valid string  in the input component contains special characters for masking,
+    // we end up pulling thos special characters with formData.get() have to replace them.
+
+    // in an ideal world, we could "hijack" the get() function to return some value that isn't the value inside
+    // of the input component and instead return the phone number string directly.
+
+    let phoneNumber = formData.get("phone-number");
+
+    if (phoneNumber !== "") {
+      phoneNumber = phoneNumber as string;
+      phoneNumber = phoneNumber.replaceAll(/[^0-9]/g, "");
+      // handle phone number db stuff here
+    }
+
+    console.log(phoneNumber);
 
     // TODO: accept phoneNumber at /register endpoint
-    // remember to handle empty string phone numbers
-    console.log(phoneNumber);
-    // TODO: input validation
 
     // request to login endpoint
     // refresh_token cookie is set here
