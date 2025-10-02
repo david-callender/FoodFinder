@@ -1,3 +1,4 @@
+import { LinkBar } from "../components/LinkBar/LinkBar";
 import { Menu } from "../components/Menu/Menu";
 
 import { MenuItems } from "./seedData";
@@ -8,7 +9,12 @@ import type { FC } from "react";
 const Home: FC = () => {
   // TODO : make api calls here to construct menu list
   // this is only temporary data
-  return <Menu items={MenuItems} />;
+  return (
+    <>
+      <LinkBar />
+      <Menu items={MenuItems} />
+    </>
+  );
 };
 
 export default Home;
