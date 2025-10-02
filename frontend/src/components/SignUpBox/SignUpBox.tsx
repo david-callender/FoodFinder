@@ -1,16 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { PhoneNumberInput } from "../PhoneNumberInput/PhoneNumberInput"
 
+import { PhoneNumberInput } from "../PhoneNumberInput/PhoneNumberInput";
 
-import type {FC, FormEvent } from "react";
+import type { FC, FormEvent } from "react";
 
 export const SignUpBox: FC = () => {
   const router = useRouter();
 
-
-  
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
