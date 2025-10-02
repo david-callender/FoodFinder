@@ -3,6 +3,12 @@ import { useState } from "react";
 import type { ChangeEvent, FC } from "react";
 
 function wrapPhoneNumber(phoneNumber: string): string {
+    // Purpose: to mask phone number in input component
+    // Args:
+    // phoneNumber: string - string representing a 10 digit phone nummber
+    // Returns:
+    // string - formatted phone number of (XXX) - XXX - XXXX for masking in an input component
+
   if (phoneNumber.length !== 10) {
     return "";
   }
@@ -19,8 +25,14 @@ export const PhoneNumberInput: FC = () => {
   // phone number is stored purely as a string of integers
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // removes illicit characters from phoneNumber
+  
   function handlePhoneNumber(event: ChangeEvent<HTMLInputElement>): void {
+    // Purpose : removes illicit characters from phoneNumber and updates phoneNumber state
+    // Args:
+    // event : ChangeEvent<HTMLInputElement> - event from Input element
+    // Returns
+    // void - changes phoneNumber state in place
+
     // matches any non-digit character
     const blacklistRegex = /[^0-9]/g;
     const rawPhoneNumber = event.target.value;
