@@ -28,7 +28,9 @@ export const SignUpBox: FC = () => {
 
     let phoneNumber = formData.get("phone-number");
 
+    // if phoneNumber is entered
     if (phoneNumber !== "") {
+      // clean phone number of masking characters used in <PhoneNumberInput />
       phoneNumber = phoneNumber as string;
       phoneNumber = phoneNumber.replaceAll(/[^0-9]/g, "");
       // handle phone number db stuff here
