@@ -1,12 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { PhoneNumberInput } from "../PhoneNumberInput/PhoneNumberInput"
 
-import type { FC, FormEvent } from "react";
+
+import type {FC, FormEvent } from "react";
 
 export const SignUpBox: FC = () => {
   const router = useRouter();
 
+
+  
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
@@ -37,6 +41,7 @@ export const SignUpBox: FC = () => {
     );
 
     // TODO : Handling a "user exists" error from backend
+    // TODO : Handle User phone numbers without a US country code
 
     if (response.ok) {
       router.push("/");
@@ -50,25 +55,19 @@ export const SignUpBox: FC = () => {
       <div className="flex flex-col">
         <input
           type="email"
-          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
           name="email"
           placeholder="Email"
           required
         />
         <input
           type="password"
-          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
           name="password"
           placeholder="Password"
           required
         />
-        <input
-          type="tel"
-          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
-          name="phone-number"
-          placeholder="XXX-XXX-XXXX"
-          pattern="[0-9]{3}[0-9]{3}[0-9]{4}"
-        />
+        <PhoneNumberInput />
         <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
           Sign Up!
         </button>

@@ -66,14 +66,14 @@ export const LoginBox: FC = () => {
           type="email"
           name="email"
           placeholder="Email"
-          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
           required
         />
         <input
           type="password"
           name="password"
           placeholder="Password"
-          className="m-2 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg border-4 bg-gray-200 p-0.5 text-black"
           required
         />
         <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
