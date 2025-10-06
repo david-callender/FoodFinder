@@ -1,7 +1,4 @@
 import { LinkBar } from "../components/LinkBar/LinkBar";
-import { Menu } from "../components/Menu/Menu";
-
-import { MenuItems } from "./seedData";
 
 // components must be of shape FC
 import type { FC } from "react";
@@ -12,7 +9,6 @@ const Home: FC = () => {
   return (
     <>
       <LinkBar />
-      <Menu items={MenuItems} />
     </>
   );
 };

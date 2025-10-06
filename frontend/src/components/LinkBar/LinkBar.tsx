@@ -7,6 +7,9 @@ export const LinkBar: FC = () => {
         <a href="/login">login</a>
       </div>
       <div className="grow text-center">
+        <a href="/menu">menu</a>
+      </div>
+      <div className="grow text-center">
         <a href="/signup">signup</a>
       </div>
     </div>
