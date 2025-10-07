@@ -1,4 +1,5 @@
 "use client";
+
 import { MealList } from "../MealList/MealList";
 
 // components must be of shape FC
@@ -20,42 +21,36 @@ export const Menu: FC<Props> = ({ items }) => {
   // Args: MenuItem[]
   // items : string[]
 
+  const preferred = items.filter((item: MenuItem) => item.isPreferred);
 
-  const preferred = items.filter((item: MenuItem) => (
-    item.isPreferred
-  ))
-
-  const notPreferred  = items.filter((item: MenuItem) => (
-    !item.isPreferred
-  ))
+  const notPreferred = items.filter((item: MenuItem) => !item.isPreferred);
 
   return (
     <>
       <div className="flex justify-center">
         <table className="self-center rounded-xl">
           <thead>
-              <tr>
-                  <th>Preferred</th>
-              </tr>
+            <tr>
+              <th>Preferred</th>
+            </tr>
           </thead>
-          <tbody className="border border-white rounded-xl">
+
+          <tbody className="rounded-xl border border-white">
             <MealList items={preferred} />
           </tbody>
 
           <thead>
-              <tr>
-                  <th>Not Preferred</th>
-                  <th></th>
-              </tr>
+            <tr>
+              <th>Not Preferred</th>
+              <th></th>
+            </tr>
           </thead>
-          <tbody className="border border-white rounded-xl">
+
+          <tbody className="rounded-xl border border-white">
             <MealList items={notPreferred} />
           </tbody>
-
-
         </table>
       </div>
     </>
-    
   );
 };

@@ -22,7 +22,7 @@ export const LikeButton: FC<Props> = ({ item }) => {
   // Description : like button in menu table
 
   // setting state
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(item.isPreferred);
 
   // updating liked value
   function postLike(item: MenuItem, value: boolean): void {
