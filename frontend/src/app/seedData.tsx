@@ -3,15 +3,15 @@ import type { MenuItem } from "../components/Menu/Menu";
 // sample data for display
 
 const item1: MenuItem = {
-  key: 5,
+  id: 5,
   meal: "Apples",
-  location: "comstock",
+  isPreferred: false,
 };
 
 const item2: MenuItem = {
-  key: 6,
+  id: 6,
   meal: "Bananas",
-  location: "pioneer",
+  isPreferred: true,
 };
 
 export const MenuItems: MenuItem[] = [item1, item2];
