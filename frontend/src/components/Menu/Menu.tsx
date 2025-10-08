@@ -44,6 +44,7 @@ export const Menu: FC<Props> = ({ items }) => {
     if (isPreferred) {
       // remove from notPreferred
       setNotPreferred(
+        // TODO is this the comparison to be made? Not quite sure if object comparison like this is bulletproof
         notPreferred.filter((tempItem: MenuItem) => tempItem !== item)
       );
       // updating preference on the item
@@ -63,38 +64,20 @@ export const Menu: FC<Props> = ({ items }) => {
 
   return (
     <>
-      <div className="flex justify-center">
-        <table className="self-center rounded-xl">
-          <thead>
-            <tr>
-              <th>Preferred</th>
-            </tr>
-          </thead>
-
-          <tbody className="rounded-xl border border-white">
-            {/* To understand what is happening here, I would highly recommend reading this:
+      <div className="grid justify-center">
+        <div className="min-h-10 rounded-xl border border-white">
+          {/* To understand what is happening here, I would highly recommend reading this:
             https://stackoverflow.com/questions/76958201/how-to-pass-props-to-child-component-in-next-js-13
             essentially passing state function down two child components so that it can be used by LikeButton */}
-            <MealList
-              items={preferred}
-              setPreference={handlePreferenceChange}
-            />
-          </tbody>
+          <MealList items={preferred} setPreference={handlePreferenceChange} />
+        </div>
 
-          <thead>
-            <tr>
-              <th>Not Preferred</th>
-              <th></th>
-            </tr>
-          </thead>
-
-          <tbody className="rounded-xl border border-white">
-            <MealList
-              items={notPreferred}
-              setPreference={handlePreferenceChange}
-            />
-          </tbody>
-        </table>
+        <div className="min-h-10 rounded-xl border border-white">
+          <MealList
+            items={notPreferred}
+            setPreference={handlePreferenceChange}
+          />
+        </div>
       </div>
     </>
   );

@@ -13,12 +13,12 @@ export const MealList: FC<Props> = ({ items, setPreference }) => {
     return (
       <>
         {items.map((item: MenuItem) => (
-          <tr key={item.id}>
-            <td className="p-5">{item.meal}</td>
-            <td className="p-5">
+          <div key={item.id} className="grid grid-cols-2 items-center">
+            <div className="p-5">{item.meal}</div>
+            <div className="p-5">
               <LikeButton item={item} setPreference={setPreference} />
-            </td>
-          </tr>
+            </div>
+          </div>
         ))}
       </>
     );
