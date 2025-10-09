@@ -24,8 +24,9 @@ type Server struct {
 }
 
 type mealWithPreference struct {
-	Meal string       `json:"meal"`
-	Is_preferred bool `json:"is_preferred"`
+	Meal         string `json:"meal"`
+	Is_preferred bool   `json:"is_preferred"`
+	Id           string `json:"id"`
 }
 
 // INTERNAL USE FUNCTIONS
@@ -132,6 +133,7 @@ func (s *Server) GetMenu(c *gin.Context) {
 		meal_list = append(meal_list, mealWithPreference{
 			Meal:         option.Name,
 			Is_preferred: false,
+			Id:           option.Id,
 		})
 	}
 

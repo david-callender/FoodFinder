@@ -6,7 +6,6 @@ import (
 	"fmt";
 	"io";
 	"net/http";
-//	"os";
 	"strings";
 	"time"
 )
@@ -23,6 +22,7 @@ type FoodBuilding struct {
 }
 
 type Meal struct {
+	Id string `json:"id"`
 	Name string `json:"name"`
 	Description string `json:"desc"`
 }
@@ -48,20 +48,31 @@ type periodIdSpec struct {
 // NON-EXPORTED STRUCTS USED ONLY FOR PARSING JSON
 
 // Period struct used for parsing period IDs into a periodIdSpec
+// Periods are themselves returned as json objects, which requires a specific
+// struct, even though our periodIdSpec simply has four fields named after the
+// period ID in question.
 type period struct {
 	Id string `json:"id"`
 	Name string `json:"name"`
 }
 
 // BEGIN: Group of structs used for parsing the menu data
+
+// Dineoncampus separates meals by category, which does not seem to have any
+// functional purpose. Still, we need go structs that match the shape of the
+// json data returned by dineoncampus.
 type category struct {
 	Items []Meal `json:"items"`
 }
 
+// Same deal here, a menu is returned under a period, with the foods being in
+// categories under the menu. Since our data isn't shaped like this, we need
+// another struct to make sure it can be properly unmarshaled.
 type menuPeriod struct {
 	Name string `json:"name"`
 	Categories []category `json:"categories"`
 }
+
 // END: Group of structs used for parsing the menu data
 
 // EXPORTED FUNCTIONS: MAY BE USED BY IMPORTING MODULES
@@ -78,6 +89,8 @@ func GetFoodBuildings(siteId string) ([]FoodBuilding, error) {
 		return nil, err
 	}
 	
+	// This struct is not anonymous as jsonv2.Unmarshal takes a reference to it
+	// We need the data contained within later, thus it must be a variable.
 	var buildings struct {
 		Buildings []FoodBuilding `json:"buildings"`
 	}
@@ -125,7 +138,7 @@ func GetLocationIdByName(buildingName, locationName, siteId string) (string, err
 // GetMenuByName(buildingName, locationName, periodName, site (strings), date (time)): 
 // Takes the name of a building, the name of a location within the building,
 // a named meal period ("breakfast", "lunch", "dinner", or "everyday"), a
-// dineoncampus site ID, and a time.Time representing the current date. 
+// dineoncampus site ID, and a time.Time representing the date for the menu requested. 
 // Returns a Menu populated with the options from dineoncampus. Names are
 // case-insensitive.
 func GetMenuByName(buildingName, locationName, periodName, siteId string, date time.Time) (Menu, error) {
@@ -138,7 +151,7 @@ func GetMenuByName(buildingName, locationName, periodName, siteId string, date t
 }
 
 // GetMenuById(locationId, periodName (strings), date (time.Time)): Takes the
-// ID of a food location (NOT A BUILDING), a named meal period, and a time.Time
+// ID of a food location (NOT A BUILDING ID), a named meal period, and a time.Time
 // representing a calendar date. Returns a Menu populated with the options from
 // dineoncampus.
 func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
@@ -179,6 +192,8 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 		return menu, err
 	}
 
+	// This struct is not anonymous as jsonv2.Unmarshal takes a reference to it
+	// We need the data contained within later, thus it must be a variable.
 	var rawMenu struct {
 		Period menuPeriod `json:"period"`
 	}
@@ -191,6 +206,9 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 	menu.PeriodName = rawMenu.Period.Name
 	menuCategories := rawMenu.Period.Categories
 
+	// Since we get an array of categories which contain an array of meals,
+	// two loops are required to flatten the two lists into one big list of
+	// meals that are not separated by category.
 	for _, category := range menuCategories {
 		for _, 	mealOption := range category.Items {
 			menu.Options = append(menu.Options, mealOption)
@@ -217,6 +235,8 @@ func getPeriodIds(locationId string, date time.Time) (periodIdSpec, error) {
 		return periodIds, err
 	}
 
+	// This struct is not anonymous as jsonv2.Unmarshal takes a reference to it
+	// We need the data contained within later, thus it must be a variable.
 	var periods struct {
 		Periods []period `json:"periods"`
 	}
@@ -224,6 +244,11 @@ func getPeriodIds(locationId string, date time.Time) (periodIdSpec, error) {
 		return periodIds, err
 	}
 	
+	// We can't assume that there will always be all four periods, because
+	// sometimes one or more periods are not returned. When this happens,
+	// it also moves all of the other periods indexes. Thus we have to loop
+	// through and check the name associated to each ID to determine which
+	// field it belongs to.
 	for _, period := range periods.Periods {
 		switch strings.ToLower(period.Name) {
 		case "breakfast":
@@ -270,6 +295,9 @@ func newDineocApiRequest(apiurl string, method string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+	// We have to add some minimum of headers to ensure that we get the right
+	// data, and also to make sure that the client does not get blocked by
+	// cloudflare (typically due to a bad useragent).
 	req.Header.Add("user-agent", useragent)
 	req.Header.Add("accept", "application/json")
 	// req is already a pointer because http.newRequest returns a pointer

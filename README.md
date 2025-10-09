@@ -34,13 +34,33 @@ access to the repository, email your github username to `calle159@umn.edu`.
 -   Language [Go](https://go.dev/)
 -   API [Gin](https://github.com/gin-gonic/gin)
 
-## Environment Variables
+### Environment Variables
 
+#### JWT
 Create a `.env` file in the root of the repository with the following values:
 
-# Backend
 -   access_key=YOUR-KEY
 -   refresh_key=YOUR-KEY
+
+#### jsonv2
+
+The `dineocclient` package uses the `encodings/json/v2` API. Currently, this
+library is not available unless you set the following environment variable prior
+to builds: `GOEXPERIMENT=jsonv2`
+
+To set this environment variable on powershell, use the following command:
+
+`$env:GOEXPERIMENT="jsonv2"`
+
+Using this command will set the environment variable for the rest of your
+powreshell session.
+
+In bash, you can use the following command:
+
+`export GOEXPERIMENT=jsonv2`
+
+Other *nix shells will have similar syntax, if you aren't using bash then you can
+look up specific methods to set variables in your particular shell.
 
 ### Getting started
 
