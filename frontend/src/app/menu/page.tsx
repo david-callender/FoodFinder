@@ -26,7 +26,7 @@ export const Menu_Page: FC = () => {
   const [mealQuery, setMealQuery] = useState<MealQuery>();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
-    // Description : hadningl submit of search query from MealSearchComponent
+    // Description : handling submit of search query from MealSearchComponent
     // TODO : make DB query to return list of items for user preferences, etc.
     // Args: MenuItem[]
     // items : string[]
@@ -59,7 +59,8 @@ export const Menu_Page: FC = () => {
   return (
     <>
       <MealSearch handleSubmit={handleSubmit} />
-      {/* TODO : update MenuItems from static -> response object from backend db*/}
+      {/* TODO : update MenuItems from static -> response object from backend db
+          MenuItems should be a state variable which is updated in handlSubmit */}
       <Menu items={MenuItems} />
     </>
   );
