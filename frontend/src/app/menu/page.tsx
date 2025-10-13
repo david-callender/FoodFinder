@@ -37,7 +37,7 @@ export const Menu_Page: FC = () => {
     let meal = formData.get("meal");
     let date = formData.get("date");
     let time = formData.get("time");
-
+    
     // Needed for validation against files (?). idk, it makes the linter happy
     // all fields are marked as required as well.
     meal = typeof meal === "string" ? meal : "MISSING_MEAL";
@@ -55,6 +55,7 @@ export const Menu_Page: FC = () => {
     // logging meal query to make linter happy
     console.log(mealQuery);
   }
+  console.log(mealQuery);
 
   return (
     <>
