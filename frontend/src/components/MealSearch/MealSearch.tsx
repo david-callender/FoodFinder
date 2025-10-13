@@ -14,20 +14,23 @@ export const MealSearch: FC<Props> = ({ handleSubmit }) => {
             <input
               type="text"
               name="meal"
-              className="m-2 w-50 bg-white text-black rounded-xl border-4 p-0.5"
+              className="m-2 w-50 rounded-xl border-4 bg-white p-0.5 text-black"
               required
             ></input>
             <input
               type="date"
               name="date"
-              className="m-2 w-50 bg-white text-black rounded-xl border-4 p-0.5"
+              className="m-2 w-50 rounded-xl border-4 bg-white p-0.5 text-black"
               required
             ></input>
-            <select name="time" className="bg-white m-2 text-black rounded-xl border-5 border-white p-0.5">
-                <option value="0">Breakfast</option>
-                <option value="1">Lunch</option>
-                <option value="2">Dinner</option>
-                <option value="3">Everyday</option>
+            <select
+              name="time"
+              className="m-2 rounded-xl border-5 border-white bg-white p-0.5 text-black"
+            >
+              <option value="0">Breakfast</option>
+              <option value="1">Lunch</option>
+              <option value="2">Dinner</option>
+              <option value="3">Everyday</option>
             </select>
             <button>Search</button>
           </div>

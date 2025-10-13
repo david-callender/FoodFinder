@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 
 import "./globals.css";
 // css for header
@@ -32,7 +33,7 @@ const RootLayout: FC<Props> = ({ children }) => {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <h1 className="m-10 content-center text-center text-4xl">
-          DineOnCampus
+          <Link href="/">DineOnCampus</Link>
         </h1>
 
         {children}
