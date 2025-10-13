@@ -10,13 +10,13 @@ import { useState } from "react";
 import filled_heart from "./filled.png";
 import unfilled_heart from "./unfilled.png";
 
-import type { MenuItem, setPreferenceFunction } from "../Menu/Menu";
+import type { MenuItem, SetPreferenceFunction } from "../Menu/Menu";
 // components must be of shape FC
 import type { FC } from "react";
 
 type Props = {
   item: MenuItem;
-  setPreference: setPreferenceFunction;
+  setPreference: SetPreferenceFunction;
 };
 
 export const LikeButton: FC<Props> = ({ item, setPreference }) => {
@@ -27,8 +27,10 @@ export const LikeButton: FC<Props> = ({ item, setPreference }) => {
 
   // updating liked value
   function postLike(item: MenuItem): void {
+    // automatically setting like button state to opposite of current state.
+    // Should not need to call this function otherwise.
     setLiked(!item.isPreferred);
-    // setting preference in parent Menu component
+    // setting preference in parent Menu component on item.
     setPreference(item);
   }
 

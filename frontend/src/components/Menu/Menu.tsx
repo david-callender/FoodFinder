@@ -15,7 +15,7 @@ export type MenuItem = {
 };
 
 // used for typing in child components see: MealList/LikeButton component
-export type setPreferenceFunction = (item: MenuItem) => void;
+export type SetPreferenceFunction = (item: MenuItem) => void;
 
 type Props = {
   items: MenuItem[];
@@ -37,10 +37,10 @@ export const Menu: FC<Props> = ({ items }) => {
 
   function handlePreferenceChange(item: MenuItem): void {
     // TODO : make a POST request for the current user to like the food
-    // what the boolean is changing to
+    // flipping preference status
     const isPreferred = !item.isPreferred;
 
-    // updating to preferred food
+    // moving to preferred food
     if (isPreferred) {
       // remove from notPreferred
       setNotPreferred(
@@ -49,15 +49,14 @@ export const Menu: FC<Props> = ({ items }) => {
       );
       // updating preference on the item
       item.isPreferred = isPreferred;
-      // add to preferred
       setPreferred([...preferred, item]);
-      // changing to not preferred
+
+      // moving to not preferred
     } else {
       // remove from preferred
       setPreferred(preferred.filter((tempItem: MenuItem) => tempItem !== item));
       // updating preference on the item
       item.isPreferred = isPreferred;
-      // add to notPreferred
       setNotPreferred([...notPreferred, item]);
     }
   }

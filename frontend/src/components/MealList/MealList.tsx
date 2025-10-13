@@ -1,11 +1,11 @@
 import { LikeButton } from "../LikeButton/LikeButton";
 
-import type { MenuItem, setPreferenceFunction } from "../Menu/Menu";
+import type { MenuItem, SetPreferenceFunction } from "../Menu/Menu";
 import type { FC } from "react";
 
 type Props = {
   items: MenuItem[];
-  setPreference: setPreferenceFunction;
+  setPreference: SetPreferenceFunction;
 };
 
 export const MealList: FC<Props> = ({ items, setPreference }) => {
