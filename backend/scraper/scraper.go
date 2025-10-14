@@ -3,7 +3,7 @@ package scraper
 import (
 	"context"
 	"errors"
-	docclient "foodfinder/dineocclient"
+	docclient "github.com/david-callender/foodfinder/dineocclient"
 	"math/rand"
 	"time"
 	pgx "github.com/jackc/pgx/v5"
@@ -23,6 +23,10 @@ const TIME_DAY time.Duration = 24 * time.Hour
 
 // NON-EXPORTED FUNCTIONS
 
+// scrapeMenuToDatabase(conn (*pgx.Conn), locationId, periodName (strings), date (time.Time):
+// Takes a database connection, a dineoncampus location ID, a meal period name,
+// and a date. It removes all old menu data for the menu corresponding to these
+// parameters, and fills in new menu data if it exists.
 func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date time.Time) error {
 	// Fetch the menu data for insertion into the DB
 	menu, err := docclient.GetMenuById(locationId, periodName, date)
@@ -96,6 +100,9 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 
 // EXPORTED FUNCTIONS FOR USE BY IMPORTING CODE
 
+// ScrapeMenusToDatabase(conn (*pgx.Conn), siteId (string)): Takes a database
+// connection and a dineoncampus site ID. It will scrape all available menus
+// into the database.
 func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 	// Fetch all food locations at a given site
 	foodBuildings, err := docclient.GetFoodBuildings(siteId)
@@ -117,7 +124,7 @@ func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 	_, err = conn.Exec(
 		context.Background(),
 		"DELETE FROM DocCache WHERE day < $1",
-		dates[0].Format("2006-01-02")
+		dates[0].Format("2006-01-02"),
 	)
 	if err != nil {
 		return err
