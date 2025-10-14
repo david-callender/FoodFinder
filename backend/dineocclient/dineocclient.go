@@ -2,17 +2,17 @@ package dineocclient
 
 import (
 	jsonv2 "encoding/json/v2";
-	"errors"
+	"errors";
 	"fmt";
 	"io";
 	"net/http";
+	"math/rand";
 	"strings";
 	"time"
 )
 
 // Global config variables that we ought to move out to a config file
 const dineocaddress = "https://apiv4.dineoncampus.com/"
-const useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0"
 
 // EXPORTED TYPES: MAY BE USED BY IMPORTING MODULES
 
@@ -105,7 +105,7 @@ func GetFoodBuildings(siteId string) ([]FoodBuilding, error) {
 // the name of a location, and a dineoncampus site ID, and returns the location
 // ID corresponding to that location. Names are case-insensitive
 func GetLocationIdByName(buildingName, locationName, siteId string) (string, error) {
-	var locationId string
+	var locationId string = ""
 
 	buildingName = strings.ToLower(buildingName)
 	locationName = strings.ToLower(locationName)
@@ -155,8 +155,8 @@ func GetMenuByName(buildingName, locationName, periodName, siteId string, date t
 // representing a calendar date. Returns a Menu populated with the options from
 // dineoncampus.
 func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
-	var menu Menu
-	var periodId string
+	var menu Menu = Menu{Locations: []Restaurant{}}
+	var periodId string = ""
 
 	dateFormatted := date.Format("2006-01-02")
 	periodIds, err := getPeriodIds(locationId, date)
@@ -179,8 +179,7 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 	}
 
 	if periodId == "" {
-		err := errors.New("GetMenu(): Failed to get period ID")
-		return menu, err
+		return menu, nil
 	}
 
 	apifunc := dineocaddress +
@@ -224,7 +223,7 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 // dinner, and everyday menus. These IDs may only be used once each.
 func getPeriodIds(locationId string, date time.Time) (periodIdSpec, error) {
 	// This has to be defined up here in case of an error so we have a 0 value
-	var periodIds periodIdSpec
+	var periodIds periodIdSpec = periodIdSpec{}
 
 	dateFormatted := date.Format("2006-01-02")
 	apifunc := dineocaddress +
@@ -298,7 +297,7 @@ func newDineocApiRequest(apiurl string, method string) (*http.Request, error) {
 	// We have to add some minimum of headers to ensure that we get the right
 	// data, and also to make sure that the client does not get blocked by
 	// cloudflare (typically due to a bad useragent).
-	req.Header.Add("user-agent", useragent)
+	req.Header.Add("user-agent", useragents[rand.Intn(len(useragents)])
 	req.Header.Add("accept", "application/json")
 	// req is already a pointer because http.newRequest returns a pointer
 	return req, nil
