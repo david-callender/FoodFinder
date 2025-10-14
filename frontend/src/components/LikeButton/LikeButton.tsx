@@ -10,7 +10,8 @@ import { useState } from "react";
 import filled_heart from "./filled.png";
 import unfilled_heart from "./unfilled.png";
 
-import type { MenuItem, SetPreferenceFunction } from "../Menu/Menu";
+import type { SetPreferenceFunction } from "../Menu/Menu";
+import type { MenuItem } from "@/db/getMenu";
 // components must be of shape FC
 import type { FC } from "react";
 

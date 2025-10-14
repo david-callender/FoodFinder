@@ -4,15 +4,9 @@ import { useState } from "react";
 
 import { MealList } from "../MealList/MealList";
 
+import type { MenuItem } from "@/db/getMenu";
 // components must be of shape FC
 import type { FC } from "react";
-
-// type for menu item
-export type MenuItem = {
-  id: number;
-  meal: string;
-  isPreferred: boolean;
-};
 
 // used for typing in child components see: MealList/LikeButton component
 export type SetPreferenceFunction = (item: MenuItem) => void;
@@ -44,7 +38,7 @@ export const Menu: FC<Props> = ({ items }) => {
     if (isPreferred) {
       // remove from notPreferred
       setNotPreferred(
-        // TODO is this the comparison to be made? Not quite sure if object comparison like this is bulletproof
+        // TODO : is this the comparison to be made? Not quite sure if object comparison like this is bulletproof
         notPreferred.filter((tempItem: MenuItem) => tempItem !== item)
       );
       // updating preference on the item

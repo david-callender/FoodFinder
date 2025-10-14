@@ -26,8 +26,6 @@ export const LoginBox: FC = () => {
     const email = formData.get("email");
     const password = formData.get("password");
 
-    // TODO: input validation
-
     // 9/27: endpoint currently assumes all users are valid.
     // At some point, when validation is implemented,
     // update this to a redirect (?) for registration

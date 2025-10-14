@@ -1,4 +1,4 @@
-import type { MenuItem } from "../components/Menu/Menu";
+import type { MenuItem } from "@/db/getMenu";
 
 // sample data for display
 
@@ -14,4 +14,4 @@ const item2: MenuItem = {
   isPreferred: true,
 };
 
-export const MenuItems: MenuItem[] = [item1, item2];
+export const seedMenuItems: MenuItem[] = [item1, item2];

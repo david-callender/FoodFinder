@@ -1,6 +1,7 @@
 import { LikeButton } from "../LikeButton/LikeButton";
 
-import type { MenuItem, SetPreferenceFunction } from "../Menu/Menu";
+import type { SetPreferenceFunction } from "../Menu/Menu";
+import type { MenuItem } from "@/db/getMenu";
 import type { FC } from "react";
 
 type Props = {
