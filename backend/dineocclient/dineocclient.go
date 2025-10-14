@@ -154,7 +154,7 @@ func GetMenuByName(buildingName, locationName, periodName, siteId string, date t
 // representing a calendar date. Returns a Menu populated with the options from
 // dineoncampus.
 func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
-	var menu Menu = Menu{Locations: []Restaurant{}}
+	var menu Menu = Menu{Options: []Meal{}}
 	var periodId string = ""
 
 	dateFormatted := date.Format("2006-01-02")
