@@ -2,7 +2,6 @@ package dineocclient
 
 import (
 	jsonv2 "encoding/json/v2";
-	"errors";
 	"fmt";
 	"io";
 	"net/http";
@@ -297,7 +296,7 @@ func newDineocApiRequest(apiurl string, method string) (*http.Request, error) {
 	// We have to add some minimum of headers to ensure that we get the right
 	// data, and also to make sure that the client does not get blocked by
 	// cloudflare (typically due to a bad useragent).
-	req.Header.Add("user-agent", useragents[rand.Intn(len(useragents)])
+	req.Header.Add("user-agent", useragents[rand.Intn(len(useragents))])
 	req.Header.Add("accept", "application/json")
 	// req is already a pointer because http.newRequest returns a pointer
 	return req, nil

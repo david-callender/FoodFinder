@@ -66,13 +66,19 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	}
 
 	// Only perform the insert operation if there's stuff to insert.
-	if len(menu) != 0 {
+	if len(menu.Options) != 0 {
 		_, err = transaction.CopyFrom(
 			context.Background(),
 			pgx.Identifier{"DocCache"},
 			[]string{"day", "location", "mealtime", "meal", "mealid"},
 			pgx.CopyFromSlice(len(menu), func(i int) ([]any, error) {
-				return []any{dateFormatted, locationId, mealtimeNum, menu[i].Name, menu[i].Id}, nil
+				return []any{
+					dateFormatted,
+					locationId,
+					mealtimeNum,
+					menu.Options[i].Name,
+					menu.Options[i].Id,
+				}, nil
 			}),
 		)
 		if err != nil {
