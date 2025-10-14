@@ -38,7 +38,7 @@ export const SignUpBox: FC = () => {
 
     console.log(phoneNumber);
 
-    // TODO: accept phoneNumber at /register endpoint
+    // TODO: DB accept phoneNumber at /register endpoint
 
     // request to login endpoint
     // refresh_token cookie is set here
