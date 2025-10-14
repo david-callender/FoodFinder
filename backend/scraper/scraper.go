@@ -106,6 +106,17 @@ func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 		dates = append(dates, currentDate.Add(timeOffset))
 	}
 
+	// Delete all menus that are older than 1 week to prevent endlessly growing
+	// the db.
+	_, err = conn.Exec(
+		context.Background(),
+		"DELETE FROM DocCache WHERE day < $1",
+		dates[0].Format("2006-01-02")
+	)
+	if err != nil {
+		return err
+	}
+
 	for _, building := range foodBuildings {
 		for _, location := range building.Locations {
 			for _, periodName := range mealtimeIndexer {
