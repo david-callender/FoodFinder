@@ -3,7 +3,7 @@ package scraper
 import (
 	"context"
 	"errors"
-	docclient "github.com/david-callender/foodfinder/dineocclient"
+	docclient "github.com/david-callender/FoodFinder/dineocclient"
 	"math/rand"
 	"time"
 	pgx "github.com/jackc/pgx/v5"
@@ -62,7 +62,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	
 	_, err = transaction.Exec(
 		context.Background(),
-		"DELETE FROM DocCache WHERE day=$1 AND location=$2 AND mealtime=$3;",
+		`DELETE FROM "DocCache" WHERE day=$1 AND location=$2 AND mealtime=$3;`,
 		dateFormatted, locationId, mealtimeNum,
 	)
 	if err != nil {
@@ -123,7 +123,7 @@ func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 	// the db.
 	_, err = conn.Exec(
 		context.Background(),
-		"DELETE FROM DocCache WHERE day < $1",
+		`DELETE FROM "DocCache" WHERE day < $1`,
 		dates[0].Format("2006-01-02"),
 	)
 	if err != nil {
