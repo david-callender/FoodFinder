@@ -1,42 +1,159 @@
 package main
 
 import (
-	"database/sql"
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/google/uuid"
+	pgxv5 "github.com/jackc/pgx/v5"
+	pgx "github.com/jackc/pgx/v5/pgxpool"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/gin-contrib/cors" // cors handling later
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
-	"github.com/gin-contrib/cors"	// cors handling later
 )
+
+// user table in the db
+type Users struct {
+	UUID     string
+	Email    string
+	Password string
+}
 
 // GLOABL VAR STORAGE
 type Server struct {
-	DB *sql.DB
+	DB *pgx.Pool
 }
 
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
 const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
-func connectDB() (string, error) {
-	db := "it worked"
+func connectDB() (*pgx.Pool, error) {
+	dsn := os.Getenv("db_url")
+	if dsn == "" {
+		dsn = os.Getenv("DATABASE_URL")
+	}
+	if dsn == "" {
+		return nil, fmt.Errorf("DATABASE_URL (or db_url) is not set")
+	}
+
+	db, err := pgx.New(context.Background(), dsn)
+	if err != nil {
+		fmt.Println("failed to connect to database", err)
+		return db, err
+	}
+
+	//defer db.Close()
+
+	if err := db.Ping(context.Background()); err != nil {
+		fmt.Println("failed to ping database", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS users (uuid UUID PRIMARY KEY, email TEXT, password TEXT)")
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 
-func FindOneUserByID(db *sql.DB, id string) (string, error) {
-
-	return "user data", nil
+func EmailExists(db *pgx.Pool, email string) (bool, error) {
+	// Purpose: check if email is exist in users table
+	// Arguments: db: *sql.DB (sql database model),
+	//			  email: string (email of user)
+	// Return: exist: boolean (true is exist false if not)
+	//		   err: error
+	var exists bool
+	err := db.QueryRow(context.Background(),
+		"SELECT EXISTS (SELECT 1 FROM users WHERE email=$1)",
+		email,
+	).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
-func UpdateOneUserById(db *sql.DB, id string) (string, error) {
-	return "update user succesful", nil
+func AddNewUser(db *pgx.Pool, uuid, email, password string) error {
+	// Purpose: add a new user to the users table
+	// Arguments: db: *sql.DB (sql database model),
+	//			  uuid: uuid (user id stuff)
+	//			  email: string (email of user)
+	//			  password: string (hash of password)
+	// Return: err: error
+
+	email_exist, err := EmailExists(db, email)
+	if err != nil {
+		return err
+	}
+	if email_exist {
+		return fmt.Errorf("email already in use")
+	}
+
+	_, err = db.Exec(context.Background(),
+		"INSERT INTO users (uuid, email, password) VALUES ($1, $2, $3)",
+		uuid, email, password,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func generateToken(username string, userid string) (string, string, error) {
+func FindOneUserByEmail(db *pgx.Pool, email string) (*Users, error) {
+	// Purpose: finds user row by their email
+	// Arguments: db: *sql.DB (sql database model),
+	//			  email: string (email of user)
+	// Return: users: *Users (user data Struct)
+	// 		   err: error
+
+	var user Users
+
+	err := db.QueryRow(context.Background(),
+		"SELECT uuid, email, password FROM users WHERE email=$1",
+		email,
+	).Scan(&user.UUID, &user.Email, &user.Password)
+
+	if err != nil {
+		if errors.Is(err, pgxv5.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err // some other error
+	}
+
+	return &user, nil
+}
+
+func HashPassword(password string) (string, error) {
+	// Purpose: hashes users password before storing in db
+	// Arguments: password: string (user input password)
+	// Return: password_hash: string (hash of password)
+	// 		   err: error
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashed), nil // store this string in your password column
+}
+
+func CheckPasswordHash(hashedPassword, password string) error {
+	// Purpose: compares users hash in db to pasword typed in
+	// Arguments: password: string (user input password)
+	//			  hashed_password: string (hash from db)
+	// Return: result: (nil == success, nil != failed)
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+func generateToken(email string, userid string) (string, string, error) {
 	// Purpose: to generate a new pair of access and refresh tokens
 	// Arguments: username: string (account username),
 	// 			  userid: string (account id in SQL database)
@@ -46,16 +163,16 @@ func generateToken(username string, userid string) (string, string, error) {
 	creation_time := time.Now()
 
 	access_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": username,
-		"sub":      userid,
-		"iat":      creation_time.Unix(),
-		"exp":      creation_time.Add(ACCESS_TOKEN_KEEPALIVE).Unix(),
+		"email": email,
+		"sub":   userid,
+		"iat":   creation_time.Unix(),
+		"exp":   creation_time.Add(ACCESS_TOKEN_KEEPALIVE).Unix(),
 	})
 	refresh_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": username,
-		"sub":      userid,
-		"iat":      creation_time.Unix(),
-		"exp":      creation_time.Add(REFRESH_TOKEN_KEEPALIVE).Unix(),
+		"email": email,
+		"sub":   userid,
+		"iat":   creation_time.Unix(),
+		"exp":   creation_time.Add(REFRESH_TOKEN_KEEPALIVE).Unix(),
 	})
 
 	sign_access, err1 := access_token.SignedString([]byte(os.Getenv("access_key")))
@@ -71,13 +188,12 @@ func generateToken(username string, userid string) (string, string, error) {
 	return sign_access, sign_refresh, err2
 }
 
-func verifyToken(tokenString string, secretKey []byte) error {
+func verifyToken(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 	// Purpose: to verfiy jwt tokens
 	// Arguments: tokenString: string (token to verify),
 	// 			  secretKey: string (the key of the token to verify)
 	// Return: if the token is valid this function will return nil
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// ensure it's really HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
@@ -85,21 +201,18 @@ func verifyToken(tokenString string, secretKey []byte) error {
 	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if !token.Valid {
-		return fmt.Errorf("invalid token")
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
 	}
-
-	return nil
+	return nil, fmt.Errorf("invalid token")
 }
 
-// Endpoint functions here
+func RefreshCookieTemplate(c *gin.Context, email string, uid string) (string, error) {
 
-func RefreshCookieTemplate(c *gin.Context, username string, uid string) (string, error) {
-
-	access, refresh, err := generateToken(username, uid)
+	access, refresh, err := generateToken(email, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
 		return "", err
@@ -120,30 +233,47 @@ func RefreshCookieTemplate(c *gin.Context, username string, uid string) (string,
 	return access, err
 }
 
+//----------------------------------------------------
+//----------------------------------------------------
+//---------------START-OF-API-ENDPOINTS---------------
+
 func (s *Server) Refresh(c *gin.Context) {
 	// Method: POST
 
 	jwt_refresh_key := []byte(os.Getenv("refresh_key"))
 
 	refresh_cookie, err := c.Cookie("refresh_token")
+	fmt.Printf("token_data raw: %#v\n", refresh_cookie)
+
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"detail": "no cookie found!"})
 		return
 	}
 
-	err = verifyToken(refresh_cookie, jwt_refresh_key)
+	token_data, err := verifyToken(refresh_cookie, jwt_refresh_key)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token vefication failed"})
+		c.JSON(http.StatusForbidden, gin.H{"detail": "token vefication failed"})
 		return
 	}
 
 	// DO SQL STUFF HERE YO
 
+	email, ok1 := token_data["email"].(string)
+	uid, ok2 := token_data["sub"].(string)
+
+	if !ok1 {
+		fmt.Println(ok1)
+		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload (email)"})
+		return
+	}
+	if !ok2 {
+		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload (sub)"})
+		return
+	}
+
 	// END OF SQL
 
-	username := "test"
-	uid := "1"
-	access, err := RefreshCookieTemplate(c, username, uid)
+	access, err := RefreshCookieTemplate(c, email, uid)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
@@ -157,23 +287,39 @@ func (s *Server) Login(c *gin.Context) {
 	// Method: POST
 
 	var login_account struct {
-		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
 	err := c.ShouldBindJSON(&login_account)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "username and password required"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "Email and password required"})
 		return
 	}
 
 	// DO SQL STUFF HERE YO
 
+	user_result, err := FindOneUserByEmail(s.DB, login_account.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
+		return
+	}
+	if user_result == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid credentials"})
+		return
+	}
+	err = CheckPasswordHash(user_result.Password, login_account.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid credentials"})
+		return
+
+	}
+
 	// END OF SQL
 
-	username := "test"
-	uid := "1"
-	access, err := RefreshCookieTemplate(c, username, uid)
+	email := user_result.Email
+	uid := user_result.UUID
+	access, err := RefreshCookieTemplate(c, email, uid)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
@@ -183,28 +329,63 @@ func (s *Server) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"access_token": access,
 		"detail":       "login success",
-		"user":         gin.H{"uuid": uid, "username": login_account.Username},
+		"user":         gin.H{"uuid": uid, "username": login_account.Email},
+	})
+}
+
+func (s *Server) Logout(c *gin.Context) {
+	cookie := &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1, // tells browser to delete
+		HttpOnly: true,
+		Secure:   false, // set true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	http.SetCookie(c.Writer, cookie)
+
+	c.JSON(http.StatusOK, gin.H{
+		"detail": "logout success",
 	})
 }
 
 func (s *Server) Register(c *gin.Context) {
 	var register_account struct {
-		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&register_account); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "username and password required"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "Email and password required"})
 		return
 	}
 
 	// DO SQL STUFF HERE YO
 
+	email := register_account.Email
+	uid := uuid.New().String()
+
+	password, err := HashPassword(register_account.Password)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"detail": "invalid password failed to hash",
+		})
+		return
+	}
+
+	sql_err := AddNewUser(s.DB, uid, email, password)
+	if sql_err != nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"detail": "Email address is already in use!",
+		})
+		return
+	}
+
 	// END OF SQL
 
-	username := "test"
-	uid := "1"
-	access, err := RefreshCookieTemplate(c, username, uid)
+	access, err := RefreshCookieTemplate(c, email, uid)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
@@ -214,9 +395,13 @@ func (s *Server) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"detail":       "register success",
 		"access_token": access,
-		"user":         gin.H{"uuid": register_account.Username, "username": register_account.Username},
+		"user":         gin.H{"uuid": register_account.Email, "username": register_account.Email},
 	})
 }
+
+//---------------END-OF-API-ENDPOINTS-----------------
+//----------------------------------------------------
+//----------------------------------------------------
 
 func main() {
 
@@ -227,13 +412,14 @@ func main() {
 	}
 
 	// connect to the database
-	_, err := connectDB()
+	db, err := connectDB()
 	if err != nil {
-		fmt.Println("database failed to initalize")
+		fmt.Println("database failed to initialize:", err)
 		return
 	}
+	defer db.Close()
 
-	s := &Server{DB: nil}
+	s := &Server{DB: db}
 
 	router := gin.Default()
 
