@@ -9,9 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/uuid"
-	pgxv5 "github.com/jackc/pgx/v5"
-	pgx "github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -23,55 +22,50 @@ import (
 
 // user table in the db
 type Users struct {
-	UUID     string
-	Email    string
-	Password string
+	ID         string
+	Email      string
+	Password   string
+	DispayName string
 }
 
 // GLOABL VAR STORAGE
 type Server struct {
-	DB *pgx.Pool
+	DB *pgxpool.Pool
 }
 
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
 const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
-func connectDB() (*pgx.Pool, error) {
-	dsn := os.Getenv("db_url")
-	if dsn == "" {
-		dsn = os.Getenv("DATABASE_URL")
-	}
+var ErrEmailInUse = errors.New("email already in use")
+
+func connectDB() (*pgxpool.Pool, error) {
+	dsn := os.Getenv("connection_string")
 	if dsn == "" {
 		return nil, fmt.Errorf("DATABASE_URL (or db_url) is not set")
 	}
 
-	db, err := pgx.New(context.Background(), dsn)
+	db, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
 		fmt.Println("failed to connect to database", err)
 		return db, err
 	}
-
-	//defer db.Close()
 
 	if err := db.Ping(context.Background()); err != nil {
 		fmt.Println("failed to ping database", err)
 		return nil, err
 	}
 
-	_, err = db.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS users (uuid UUID PRIMARY KEY, email TEXT, password TEXT)")
-	if err != nil {
-		return nil, err
-	}
-
 	return db, nil
 }
 
-func EmailExists(db *pgx.Pool, email string) (bool, error) {
-	// Purpose: check if email is exist in users table
-	// Arguments: db: *sql.DB (sql database model),
-	//			  email: string (email of user)
-	// Return: exist: boolean (true is exist false if not)
-	//		   err: error
+// Purpose: check if email is exist in users table
+// Arguments: db: *sql.DB (sql database model),
+//			  email: string (email of user)
+// Return: exist: boolean (true is exist false if not)
+//		   err: error
+
+func EmailExists(db *pgxpool.Pool, email string) (bool, error) {
+
 	var exists bool
 	err := db.QueryRow(context.Background(),
 		"SELECT EXISTS (SELECT 1 FROM users WHERE email=$1)",
@@ -83,48 +77,49 @@ func EmailExists(db *pgx.Pool, email string) (bool, error) {
 	return exists, nil
 }
 
-func AddNewUser(db *pgx.Pool, uuid, email, password string) error {
-	// Purpose: add a new user to the users table
-	// Arguments: db: *sql.DB (sql database model),
-	//			  uuid: uuid (user id stuff)
-	//			  email: string (email of user)
-	//			  password: string (hash of password)
-	// Return: err: error
+// Purpose: add a new user to the users table
+// Arguments: db: *sql.DB (sql database model),
+//			  uuid: uuid (user id stuff)
+//			  email: string (email of user)
+//			  password: string (hash of password)
+// Return: err: error
 
-	email_exist, err := EmailExists(db, email)
-	if err != nil {
-		return err
-	}
-	if email_exist {
-		return fmt.Errorf("email already in use")
-	}
+func AddNewUser(db *pgxpool.Pool, email, password string) (string, error) {
+	var id string
+	// Assumes: users(id UUID PRIMARY KEY DEFAULT gen_random_uuid(), email UNIQUE, ...)
+	err := db.QueryRow(context.Background(), `
+        INSERT INTO users (email, password, phone, displayName)
+        VALUES ($1, $2, '', '')
+        ON CONFLICT (email) DO NOTHING
+        RETURNING id
+    `, email, password).Scan(&id)
 
-	_, err = db.Exec(context.Background(),
-		"INSERT INTO users (uuid, email, password) VALUES ($1, $2, $3)",
-		uuid, email, password,
-	)
 	if err != nil {
-		return err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrEmailInUse
+		}
+		return "", err
 	}
-	return nil
+	return id, nil
 }
 
-func FindOneUserByEmail(db *pgx.Pool, email string) (*Users, error) {
-	// Purpose: finds user row by their email
-	// Arguments: db: *sql.DB (sql database model),
-	//			  email: string (email of user)
-	// Return: users: *Users (user data Struct)
-	// 		   err: error
+// Purpose: finds user row by their email
+// Arguments: db: *sql.DB (sql database model),
+//			  email: string (email of user)
+// Return: users: *Users (user data Struct)
+// 		   err: error
+
+func ExistsByEmail(db *pgxpool.Pool, email string) (*Users, error) {
 
 	var user Users
 
 	err := db.QueryRow(context.Background(),
 		"SELECT uuid, email, password FROM users WHERE email=$1",
 		email,
-	).Scan(&user.UUID, &user.Email, &user.Password)
+	).Scan(&user.ID, &user.Email, &user.Password)
 
 	if err != nil {
-		if errors.Is(err, pgxv5.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err // some other error
@@ -133,11 +128,13 @@ func FindOneUserByEmail(db *pgx.Pool, email string) (*Users, error) {
 	return &user, nil
 }
 
+// Purpose: hashes users password before storing in db
+// Arguments: password: string (user input password)
+// Return: password_hash: string (hash of password)
+//
+//	err: error
 func HashPassword(password string) (string, error) {
-	// Purpose: hashes users password before storing in db
-	// Arguments: password: string (user input password)
-	// Return: password_hash: string (hash of password)
-	// 		   err: error
+
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -145,20 +142,26 @@ func HashPassword(password string) (string, error) {
 	return string(hashed), nil // store this string in your password column
 }
 
+// Purpose: compares users hash in db to pasword typed in
+// Arguments: password: string (user input password)
+//
+//	hashed_password: string (hash from db)
+//
+// Return: result: (nil == success, nil != failed)
 func CheckPasswordHash(hashedPassword, password string) error {
-	// Purpose: compares users hash in db to pasword typed in
-	// Arguments: password: string (user input password)
-	//			  hashed_password: string (hash from db)
-	// Return: result: (nil == success, nil != failed)
+
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
+// Purpose: to generate a new pair of access and refresh tokens
+// Arguments: username: string (account username),
+//
+//	userid: string (account id in SQL database)
+//
+// Return: access_token: string (access key to store in browser local storage)
+//
+//	refresh_token: string (this will get stored in the http cookies)
 func generateToken(email string, userid string) (string, string, error) {
-	// Purpose: to generate a new pair of access and refresh tokens
-	// Arguments: username: string (account username),
-	// 			  userid: string (account id in SQL database)
-	// Return: access_token: string (access key to store in browser local storage)
-	//		   refresh_token: string (this will get stored in the http cookies)
 
 	creation_time := time.Now()
 
@@ -299,7 +302,7 @@ func (s *Server) Login(c *gin.Context) {
 
 	// DO SQL STUFF HERE YO
 
-	user_result, err := FindOneUserByEmail(s.DB, login_account.Email)
+	user_result, err := ExistsByEmail(s.DB, login_account.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
 		return
@@ -318,7 +321,7 @@ func (s *Server) Login(c *gin.Context) {
 	// END OF SQL
 
 	email := user_result.Email
-	uid := user_result.UUID
+	uid := user_result.ID
 	access, err := RefreshCookieTemplate(c, email, uid)
 
 	if err != nil {
@@ -351,7 +354,7 @@ func (s *Server) Logout(c *gin.Context) {
 	})
 }
 
-func (s *Server) Register(c *gin.Context) {
+func (s *Server) Signup(c *gin.Context) {
 	var register_account struct {
 		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
@@ -365,7 +368,6 @@ func (s *Server) Register(c *gin.Context) {
 	// DO SQL STUFF HERE YO
 
 	email := register_account.Email
-	uid := uuid.New().String()
 
 	password, err := HashPassword(register_account.Password)
 	if err != nil {
@@ -375,11 +377,14 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	sql_err := AddNewUser(s.DB, uid, email, password)
-	if sql_err != nil {
-		c.JSON(http.StatusConflict, gin.H{
-			"detail": "Email address is already in use!",
-		})
+	uid, err := AddNewUser(s.DB, email, password)
+	if err != nil {
+		if errors.Is(err, ErrEmailInUse) {
+			c.JSON(http.StatusConflict, gin.H{"detail": "Email address is already in use!"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
+		fmt.Println(err)
 		return
 	}
 
@@ -393,9 +398,7 @@ func (s *Server) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"detail":       "register success",
 		"access_token": access,
-		"user":         gin.H{"uuid": register_account.Email, "username": register_account.Email},
 	})
 }
 
@@ -442,7 +445,7 @@ func main() {
 	// Arguments:
 	//	username: string,
 	//	password: string
-	router.POST("/register", s.Register)
+	router.POST("/signup", s.Signup)
 
 	// Method: POST
 	// Purpose: users can login to their accounts
