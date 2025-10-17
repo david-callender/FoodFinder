@@ -86,7 +86,6 @@ func EmailExists(db *pgxpool.Pool, email string) (bool, error) {
 
 func AddNewUser(db *pgxpool.Pool, email, password string) (string, error) {
 	var id string
-	// Assumes: users(id UUID PRIMARY KEY DEFAULT gen_random_uuid(), email UNIQUE, ...)
 	err := db.QueryRow(context.Background(), `
         INSERT INTO users (email, password, phone, displayName)
         VALUES ($1, $2, '', '')
