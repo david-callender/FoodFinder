@@ -245,7 +245,6 @@ func (s *Server) Refresh(c *gin.Context) {
 	jwt_refresh_key := []byte(os.Getenv("refresh_key"))
 
 	refresh_cookie, err := c.Cookie("refresh_token")
-	fmt.Printf("token_data raw: %#v\n", refresh_cookie)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"detail": "no cookie found!"})
