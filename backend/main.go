@@ -22,10 +22,10 @@ import (
 
 // user table in the db
 type Users struct {
-	ID         string
-	Email      string
-	Password   string
-	DispayName string
+	ID          string
+	Email       string
+	Password    string
+	DisplayName string
 }
 
 // GLOABL VAR STORAGE
