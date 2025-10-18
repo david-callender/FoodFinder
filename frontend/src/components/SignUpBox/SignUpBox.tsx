@@ -18,7 +18,9 @@ export const SignUpBox: FC = () => {
     // pulling form data
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email");
+    const displayName = "Temporary"; // TODO : add displayName field to signup form so user can give their own usernames
     const password = formData.get("password");
+    
 
     // hack-y solution for now. Because the valid string  in the input component contains special characters for masking,
     // we end up pulling thos special characters with formData.get() have to replace them.
@@ -48,7 +50,7 @@ export const SignUpBox: FC = () => {
         method: "POST",
         credentials: "include", // need this for receive cookies w/ cors
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password: password }),
+        body: JSON.stringify({ username: email, password: password, displayName: displayName }),
       }
     );
 
