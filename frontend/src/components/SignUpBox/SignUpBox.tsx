@@ -45,6 +45,7 @@ function removeBlacklistCharacters(phoneNumber: string): string {
 
 export const SignUpBox: FC = () => {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -70,12 +71,17 @@ export const SignUpBox: FC = () => {
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
+    // Purpose : POSTing form/state values to server
+    // Args:
+    // event : ChangeEvent<HTMLInputElement> - event from Input element
+    // Returns
+    // void - posting data to server
     // prevents refresh of page
     event.preventDefault();
 
     const displayName = "Temporary"; // TODO : add displayName field to signup form so user can give their own usernames
 
-    // TODO: DB accept phoneNumber at /signup endpoint
+    
 
     // request to login endpoint
     // refresh_token cookie is set here
@@ -89,6 +95,7 @@ export const SignUpBox: FC = () => {
           username: email,
           password: password,
           displayName: displayName,
+          // TODO: DB accept phoneNumber at /signup endpoint 
         }),
       }
     );
