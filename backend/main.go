@@ -14,14 +14,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// GLOBAL VAR STORAGE
-const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
-const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
-// INTERNAL USE TYPES
+// GLOBAL VAR STORAGE
 type Server struct {
 	DB *sql.DB
 }
+
+const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
+const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
 type mealWithPreference struct {
 	Meal         string `json:"meal"`
