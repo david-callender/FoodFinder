@@ -8,13 +8,14 @@ import (
 	"os"
 	"time"
 
+	docclient "github.com/david-callender/FoodFinder/dineocclient"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"github.com/gin-contrib/cors"	// cors handling later
 )
 
-// GLOABL VAR STORAGE
+// GLOBAL VAR STORAGE
 type Server struct {
 	DB *sql.DB
 }
@@ -22,6 +23,13 @@ type Server struct {
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
 const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
+type mealWithPreference struct {
+	Meal         string `json:"meal"`
+	Is_preferred bool   `json:"is_preferred"`
+	Id           string `json:"id"`
+}
+
+// INTERNAL USE FUNCTIONS
 func connectDB() (string, error) {
 	db := "it worked"
 	return db, nil
@@ -96,6 +104,41 @@ func verifyToken(tokenString string, secretKey []byte) error {
 }
 
 // Endpoint functions here
+
+func (s *Server) GetMenu(c *gin.Context) {
+	//Method: GET
+
+	day := c.Query("day")
+	dining_hall := c.Query("dining_hall")
+	mealtime := c.Query("mealtime")
+
+	// GetMenuById requires a time.Time so we have to parse the day
+	day_as_time, err := time.Parse(time.DateOnly, day)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "invalid date"})
+		return
+	}
+
+	// TODO: fetch via SQL query from our database instead of directly using dineocclient
+	// TODO: this is technically an API call that requries authentication. Implement this.
+	menu, err := docclient.GetMenuById(dining_hall, mealtime, day_as_time)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "failed getting menu data"})
+	}
+
+	// This has to be done because the Meal struct doesn't have preferences and has
+	// different field names than what the frontend expects.
+	meal_list := make([]mealWithPreference, 0, 20)
+	for _, option := range menu.Options {
+		meal_list = append(meal_list, mealWithPreference{
+			Meal:         option.Name,
+			Is_preferred: false,
+			Id:           option.Id,
+		})
+	}
+
+	c.JSON(http.StatusOK, meal_list)
+}
 
 func RefreshCookieTemplate(c *gin.Context, username string, uid string) (string, error) {
 
@@ -264,6 +307,14 @@ func main() {
 	//	username: string,
 	//	password: string
 	router.POST("/login", s.Login)
+
+	// Method: GET
+	// Purpose: Fetch a personalized menu with preference data
+	// Arguments:
+	//	location: string (dineoncampus location ID)
+	//	mealtime: string ("breakfast", "lunch", "dinner", or "everyday")
+	//	day: string (YYYY-MM-DD)
+	router.GET("/getmenu", s.GetMenu)
 
 	router.Run("localhost:8080")
 }
