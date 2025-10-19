@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	docclient "github.com/david-callender/FoodFinder/dineocclient"
+	"github.com/jackc/pgx/v5"
 	"math/rand"
-	"time"
-	pgx "github.com/jackc/pgx/v5"
 	"strings"
+	"time"
 )
 
 // Global variables
@@ -43,9 +43,9 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 		}
 	}
 	if mealtimeNum == 255 {
-		return errors.New("scrapeMenuToDatabase: Invalid period name.")
+		return errors.New("scrapeMenuToDatabase: Invalid period name")
 	}
-	
+
 	dateFormatted := date.Format("2006-01-02")
 
 	// Scraping a location-period-day menu into the db updates the db by
@@ -59,7 +59,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	// This can be safely done since transaction.Rollback returns an error
 	// once the transaction has been closed.
 	defer transaction.Rollback(context.Background())
-	
+
 	_, err = transaction.Exec(
 		context.Background(),
 		`DELETE FROM "DocCache" WHERE day=$1 AND location=$2 AND mealtime=$3;`,
@@ -75,7 +75,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 			context.Background(),
 			pgx.Identifier{"DocCache"},
 			[]string{"day", "location", "mealtime", "meal", "mealid"},
-			pgx.CopyFromSlice(len(menu), func(i int) ([]any, error) {
+			pgx.CopyFromSlice(len(menu.Options), func(i int) ([]any, error) {
 				return []any{
 					dateFormatted,
 					locationId,
@@ -142,11 +142,11 @@ func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 					// SLEEP_MAX_DIFF + SLEEP_MIN_SECS seconds
 					// to prevent rate limiting or overloading
 					// our database when scraping.
-					time.Sleep(time.Duration(rand.Intn(SLEEP_MAX_DIFF) + SLEEP_MIN_SECS) * time.Second)
+					time.Sleep(time.Duration(rand.Intn(SLEEP_MAX_DIFF)+SLEEP_MIN_SECS) * time.Second)
 				}
 			}
 		}
 	}
-	
+
 	return nil
 }

@@ -1,12 +1,12 @@
 package dineocclient
 
 import (
-	jsonv2 "encoding/json/v2";
-	"fmt";
-	"io";
-	"net/http";
-	"math/rand";
-	"strings";
+	jsonv2 "encoding/json/v2"
+	"fmt"
+	"io"
+	"math/rand"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -16,24 +16,24 @@ const dineocaddress = "https://apiv4.dineoncampus.com/"
 // EXPORTED TYPES: MAY BE USED BY IMPORTING MODULES
 
 type FoodBuilding struct {
-	Name string `json:"buildingName"`
+	Name      string       `json:"buildingName"`
 	Locations []Restaurant `json:"locations"`
 }
 
 type Meal struct {
-	Id string `json:"id"`
-	Name string `json:"name"`
+	Id          string `json:"id"`
+	Name        string `json:"name"`
 	Description string `json:"desc"`
 }
 
 type Menu struct {
-	Date time.Time
+	Date       time.Time
 	PeriodName string
-	Options []Meal
+	Options    []Meal
 }
 
 type Restaurant struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -51,7 +51,7 @@ type periodIdSpec struct {
 // struct, even though our periodIdSpec simply has four fields named after the
 // period ID in question.
 type period struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -68,7 +68,7 @@ type category struct {
 // categories under the menu. Since our data isn't shaped like this, we need
 // another struct to make sure it can be properly unmarshaled.
 type menuPeriod struct {
-	Name string `json:"name"`
+	Name       string     `json:"name"`
 	Categories []category `json:"categories"`
 }
 
@@ -87,7 +87,7 @@ func GetFoodBuildings(siteId string) ([]FoodBuilding, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// This struct is not anonymous as jsonv2.Unmarshal takes a reference to it
 	// We need the data contained within later, thus it must be a variable.
 	var buildings struct {
@@ -134,10 +134,10 @@ func GetLocationIdByName(buildingName, locationName, siteId string) (string, err
 	return locationId, nil
 }
 
-// GetMenuByName(buildingName, locationName, periodName, site (strings), date (time)): 
+// GetMenuByName(buildingName, locationName, periodName, site (strings), date (time)):
 // Takes the name of a building, the name of a location within the building,
 // a named meal period ("breakfast", "lunch", "dinner", or "everyday"), a
-// dineoncampus site ID, and a time.Time representing the date for the menu requested. 
+// dineoncampus site ID, and a time.Time representing the date for the menu requested.
 // Returns a Menu populated with the options from dineoncampus. Names are
 // case-insensitive.
 func GetMenuByName(buildingName, locationName, periodName, siteId string, date time.Time) (Menu, error) {
@@ -173,7 +173,7 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 	case "everyday":
 		periodId = periodIds.Everyday
 	default:
-		err := fmt.Errorf("GetMenu(): Invalid period name: %v.", periodName)
+		err := fmt.Errorf("GetMenu(): Invalid period name: %v", periodName)
 		return menu, err
 	}
 
@@ -208,13 +208,12 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 	// two loops are required to flatten the two lists into one big list of
 	// meals that are not separated by category.
 	for _, category := range menuCategories {
-		for _, 	mealOption := range category.Items {
-			menu.Options = append(menu.Options, mealOption)
-		}
+		menu.Options = append(menu.Options, category.Items...)
 	}
 
 	return menu, nil
 }
+
 // NON-EXPORTED FUNCTIONS: MAY NOT BE USED BY IMPORTING MODULES
 
 // getPeriodIds(locationId, date): takes a dining hall location ID and returns
@@ -241,7 +240,7 @@ func getPeriodIds(locationId string, date time.Time) (periodIdSpec, error) {
 	if err := jsonv2.Unmarshal([]byte(jsonData), &periods); err != nil {
 		return periodIds, err
 	}
-	
+
 	// We can't assume that there will always be all four periods, because
 	// sometimes one or more periods are not returned. When this happens,
 	// it also moves all of the other periods indexes. Thus we have to loop
