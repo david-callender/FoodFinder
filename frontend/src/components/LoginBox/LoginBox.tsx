@@ -31,11 +31,9 @@ export const LoginBox: FC = () => {
     // refresh_token cookie is set here
     const response = await login(email, password);
 
-
     localStorage.setItem("access_token", response.accessToken);
     // redirect
     router.push("/");
-    
   }
 
   // final login box component

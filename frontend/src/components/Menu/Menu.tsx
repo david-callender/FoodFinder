@@ -16,7 +16,6 @@ type Props = {
 };
 
 export const Menu: FC<Props> = ({ items }) => {
-
   // Description : Table for menu items. Iterates through items and generates a row.
   // Args: MenuItem[]
   // items : string[]
@@ -27,7 +26,6 @@ export const Menu: FC<Props> = ({ items }) => {
   // everything else
   const baseNotPreferred = items.filter((item: MenuItem) => !item.isPreferred);
 
-
   // keep two seperate states for preferred/not preferred
   const [preferred, setPreferred] = useState(basePreferred);
   const [notPreferred, setNotPreferred] = useState(baseNotPreferred);
@@ -37,14 +35,13 @@ export const Menu: FC<Props> = ({ items }) => {
     const basePreferred = items.filter((item: MenuItem) => item.isPreferred);
 
     // everything else
-    const baseNotPreferred = items.filter((item: MenuItem) => !item.isPreferred);
-    
+    const baseNotPreferred = items.filter(
+      (item: MenuItem) => !item.isPreferred
+    );
+
     setPreferred(basePreferred);
     setNotPreferred(baseNotPreferred);
-
-  },[items])
-
-  
+  }, [items]);
 
   function handlePreferenceChange(item: MenuItem): void {
     //  TODO [db] : make a POST request for the current user to like the food
@@ -61,7 +58,7 @@ export const Menu: FC<Props> = ({ items }) => {
       // updating preference on the item
       item.isPreferred = isPreferred;
       setPreferred([...preferred, item]);
-      // TODO [backend] : leave commented out until fully implemented in backend. 
+      // TODO [backend] : leave commented out until fully implemented in backend.
       // Also see removeFoodPreference in the other branch of this if statement
       //addFoodPreference(item.meal);
 

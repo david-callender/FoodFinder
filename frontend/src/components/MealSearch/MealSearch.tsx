@@ -7,10 +7,14 @@ type Props = {
   setDate: (date: Date | undefined) => void;
   setTime: (time: "breakfast" | "lunch" | "dinner" | "everyday") => void;
   handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
-}
+};
 
-export const MealSearch: FC<Props> = ({ setDiningHall, setDate, setTime, handleSubmit }) => {
-
+export const MealSearch: FC<Props> = ({
+  setDiningHall,
+  setDate,
+  setTime,
+  handleSubmit,
+}) => {
   function changeTime(timeString: string): void {
     switch (timeString) {
       case "breakfast": {
@@ -58,7 +62,6 @@ export const MealSearch: FC<Props> = ({ setDiningHall, setDate, setTime, handleS
                 } else {
                   setDate(date);
                 }
-                
               }}
               className="m-2 w-50 rounded-xl border-4 bg-white p-0.5 text-black"
               required
@@ -66,7 +69,9 @@ export const MealSearch: FC<Props> = ({ setDiningHall, setDate, setTime, handleS
             <select
               name="time"
               className="m-2 rounded-xl border-5 border-white bg-white p-0.5 text-black"
-              onChange={(e) => { changeTime(e.target.value)}}
+              onChange={(e) => {
+                changeTime(e.target.value);
+              }}
             >
               <option value="breakfast">Breakfast</option>
               <option value="lunch">Lunch</option>
@@ -76,7 +81,6 @@ export const MealSearch: FC<Props> = ({ setDiningHall, setDate, setTime, handleS
             <button className="m-2">Search</button>
           </div>
         </form>
-     
       </div>
     </>
   );

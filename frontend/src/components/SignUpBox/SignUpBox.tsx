@@ -94,7 +94,6 @@ export const SignUpBox: FC = () => {
     // setting access token
     localStorage.setItem("access_token", response.accessToken);
     router.push("/");
-    
   }
 
   return (
