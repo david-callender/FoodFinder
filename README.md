@@ -17,10 +17,22 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 ### Getting started
 
--   Install bun.
+-   In a terminal, clone the repository using `git clone https://github.com/david-callender/FoodFinder.git`. This will create a folder called `FoodFinder` in the current working directory.
+-   Install bun from [here](https://bun.com/). You will have to completely restart your shell or VSCode for any `bun` commands to work.
 -   Run `bun install` to install all required packages.
 -   Run `bun pm trust --all` to trust installed packages.
+-   Create a `.env` file with the structure defined below.
 -   Run `bun dev` to start the dev server.
+
+### Envirnoment Variables
+
+Create a `.env` file in the `frontend/` folder that contains the following data, where `YOUR-KEY` can be anything, as long as it matches the backend.
+
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+access_key=YOUR-KEY
+refresh_key=YOUR-KEY
+```
 
 ### Before you push
 
@@ -36,11 +48,13 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 ### Environment Variables
 
-#### JWT
-Create a `.env` file in the root of the repository with the following values:
+#### .ENV
+Create a `.env` file in the `backend/` folder that contains the following data, where `YOUR-KEY` can be anything, as long as it matches the frontend.
 
--   access_key=YOUR-KEY
--   refresh_key=YOUR-KEY
+```env
+access_key=YOUR-KEY
+refresh_key=YOUR-KEY
+```
 
 #### jsonv2
 
