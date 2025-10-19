@@ -55,6 +55,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
 export const config = {
   // matches requests to "/" and "/menu"
-  // TODO : finer tuning that matches any request to the website?
+  // TODO [misc.] : finer tuning that matches any request to the website?
   matcher: ["/", "/menu"],
 };

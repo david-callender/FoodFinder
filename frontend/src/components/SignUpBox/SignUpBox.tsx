@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { signup } from "@/db/signup";
+
 import type { ChangeEvent, FC, FormEvent } from "react";
 
 function wrapPhoneNumber(phoneNumber: string): string {
@@ -57,7 +59,7 @@ export const SignUpBox: FC = () => {
     // Returns
     // void - changes phoneNumber state in place
 
-    const rawPhoneNumber = e.target.value; // TODO : further type/format verification?
+    const rawPhoneNumber = e.target.value; // TODO [misc.] : further type/format verification?
 
     const limitedPhoneNumber = removeBlacklistCharacters(rawPhoneNumber);
 
@@ -79,35 +81,20 @@ export const SignUpBox: FC = () => {
     // prevents refresh of page
     event.preventDefault();
 
-    const displayName = "Temporary"; // TODO : add displayName field to signup form so user can give their own usernames
-
-    
+    const displayName = "Temporary"; // TODO [misc.] : add displayName field to signup form so user can give their own usernames
+    console.log(displayName); // to make linter happy
 
     // request to login endpoint
     // refresh_token cookie is set here
-    const response = await fetch(
-      new URL("/register", process.env.NEXT_PUBLIC_BACKEND_URL),
-      {
-        method: "POST",
-        credentials: "include", // need this for receive cookies w/ cors
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: email,
-          password: password,
-          displayName: displayName,
-          // TODO: DB accept phoneNumber at /signup endpoint 
-        }),
-      }
-    );
+    const response = await signup(email, password);
 
-    // TODO : Handling a "user exists" error from backend (or if they already have cookies)
-    // TODO : Handle User phone numbers without a US country code
+    //  TODO [backend] : Handling a "user exists" error from backend (or if they already have cookies)
+    // TODO [misc.] : Handle User phone numbers without a US country code
 
-    if (response.ok) {
-      router.push("/");
-    } else {
-      console.log(response.status);
-    }
+    // setting access token
+    localStorage.setItem("access_token", response.accessToken);
+    router.push("/");
+    
   }
 
   return (
