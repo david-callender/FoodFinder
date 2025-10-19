@@ -14,7 +14,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-
 // GLOBAL VAR STORAGE
 type Server struct {
 	DB *sql.DB
