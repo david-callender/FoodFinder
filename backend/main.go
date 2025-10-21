@@ -9,16 +9,20 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/jackc/pgx/v5"
+  
+  "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gin-contrib/cors" // cors handling later
-	"github.com/gin-gonic/gin"
+  
+  docclient "github.com/david-callender/FoodFinder/dineocclient"
+  
+  "github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
+	"github.com/joho/godotenv"	
+	
 )
 
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
@@ -30,6 +34,12 @@ type User struct {
 	Email       string
 	Password    []byte
 	DisplayName string
+}
+
+type mealWithPreference struct {
+	Meal         string `json:"meal"`
+	Is_preferred bool   `json:"is_preferred"`
+	Id           string `json:"id"`
 }
 
 // GLOBAL VAR STORAGE
@@ -57,8 +67,6 @@ func connectDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	return db, nil
-}
 
 // Checks if a user exists in the database by an email
 func EmailExists(db *pgxpool.Pool, uid int) (bool, error) {
@@ -176,11 +184,12 @@ func verifyToken(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 	}
 	return nil, fmt.Errorf("invalid token")
 }
-
-// adds the refresh token to the http cookies and returns the access token
+  
+  // adds the refresh token to the http cookies and returns the access token
 func RefreshCookieTemplate(c *gin.Context, uid int) (string, error) {
 	access, refresh, err := generateToken(uid)
-	if err != nil {
+  
+  if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
 		return "", err
 	}
@@ -199,6 +208,44 @@ func RefreshCookieTemplate(c *gin.Context, uid int) (string, error) {
 
 	return access, err
 }
+
+// Endpoint functions here
+
+func (s *Server) GetMenu(c *gin.Context) {
+	//Method: GET
+
+	day := c.Query("day")
+	dining_hall := c.Query("dining_hall")
+	mealtime := c.Query("mealtime")
+
+	// GetMenuById requires a time.Time so we have to parse the day
+	day_as_time, err := time.Parse(time.DateOnly, day)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "invalid date"})
+		return
+	}
+
+	// TODO: fetch via SQL query from our database instead of directly using dineocclient
+	// TODO: this is technically an API call that requries authentication. Implement this.
+	menu, err := docclient.GetMenuById(dining_hall, mealtime, day_as_time)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "failed getting menu data"})
+	}
+
+	// This has to be done because the Meal struct doesn't have preferences and has
+	// different field names than what the frontend expects.
+	meal_list := make([]mealWithPreference, 0, 20)
+	for _, option := range menu.Options {
+		meal_list = append(meal_list, mealWithPreference{
+			Meal:         option.Name,
+			Is_preferred: false,
+			Id:           option.Id,
+		})
+	}
+
+	c.JSON(http.StatusOK, meal_list)
+}
+
 
 //----------------------------------------------------
 //----------------------------------------------------
@@ -384,6 +431,14 @@ func main() {
 	router.POST("/refresh", s.Refresh)
 	router.POST("/signup", s.Signup)
 	router.POST("/login", s.Login)
+
+	// Method: GET
+	// Purpose: Fetch a personalized menu with preference data
+	// Arguments:
+	//	location: string (dineoncampus location ID)
+	//	mealtime: string ("breakfast", "lunch", "dinner", or "everyday")
+	//	day: string (YYYY-MM-DD)
+	router.GET("/getmenu", s.GetMenu)
 
 	router.Run("localhost:8080")
 }

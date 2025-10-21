@@ -17,10 +17,22 @@ access to the repository, email your github username to `calle159@umn.edu`.
 
 ### Getting started
 
--   Install bun.
+-   In a terminal, clone the repository using `git clone https://github.com/david-callender/FoodFinder.git`. This will create a folder called `FoodFinder` in the current working directory.
+-   Install bun from [here](https://bun.com/). You will have to completely restart your shell or VSCode for any `bun` commands to work.
 -   Run `bun install` to install all required packages.
 -   Run `bun pm trust --all` to trust installed packages.
+-   Create a `.env` file with the structure defined below.
 -   Run `bun dev` to start the dev server.
+
+### Envirnoment Variables
+
+Create a `.env` file in the `frontend/` folder that contains the following data, where `YOUR-KEY` can be anything, as long as it matches the backend.
+
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+access_key=YOUR-KEY
+refresh_key=YOUR-KEY
+```
 
 ### Before you push
 
@@ -34,13 +46,35 @@ access to the repository, email your github username to `calle159@umn.edu`.
 -   Language [Go](https://go.dev/)
 -   API [Gin](https://github.com/gin-gonic/gin)
 
-## Environment Variables
+### Environment Variables
 
-Create a `.env` file in the root of the repository with the following values:
+#### .ENV
+Create a `.env` file in the `backend/` folder that contains the following data, where `YOUR-KEY` can be anything, as long as it matches the frontend.
 
-# Backend
--   access_key=YOUR-KEY
--   refresh_key=YOUR-KEY
+```env
+access_key=YOUR-KEY
+refresh_key=YOUR-KEY
+```
+
+#### jsonv2
+
+The `dineocclient` package uses the `encodings/json/v2` API. Currently, this
+library is not available unless you set the following environment variable prior
+to builds: `GOEXPERIMENT=jsonv2`
+
+To set this environment variable on powershell, use the following command:
+
+`$env:GOEXPERIMENT="jsonv2"`
+
+Using this command will set the environment variable for the rest of your
+powreshell session.
+
+In bash, you can use the following command:
+
+`export GOEXPERIMENT=jsonv2`
+
+Other *nix shells will have similar syntax, if you aren't using bash then you can
+look up specific methods to set variables in your particular shell.
 
 ### Getting started
 
