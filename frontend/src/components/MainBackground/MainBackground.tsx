@@ -8,7 +8,7 @@ export const MainBackground: FC = () => {
   {
     return (
       <Image
-        src={pioneer} // ⬅️ your background image path
+        src={pioneer}
         alt="Background"
         fill
         priority
