@@ -9,20 +9,19 @@ import (
 	"os"
 	"strconv"
 	"time"
-  
-  "github.com/jackc/pgx/v5"
+
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gin-contrib/cors" // cors handling later
-  
-  docclient "github.com/david-callender/FoodFinder/dineocclient"
-  
-  "github.com/gin-gonic/gin"
+
+	docclient "github.com/david-callender/FoodFinder/dineocclient"
+
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"	
-	
+	"github.com/joho/godotenv"
 )
 
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
@@ -67,6 +66,8 @@ func connectDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
+	return db, nil
+}
 
 // Checks if a user exists in the database by an email
 func EmailExists(db *pgxpool.Pool, uid int) (bool, error) {
@@ -184,12 +185,12 @@ func verifyToken(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 	}
 	return nil, fmt.Errorf("invalid token")
 }
-  
-  // adds the refresh token to the http cookies and returns the access token
+
+// adds the refresh token to the http cookies and returns the access token
 func RefreshCookieTemplate(c *gin.Context, uid int) (string, error) {
 	access, refresh, err := generateToken(uid)
-  
-  if err != nil {
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "token generation failed"})
 		return "", err
 	}
@@ -245,7 +246,6 @@ func (s *Server) GetMenu(c *gin.Context) {
 
 	c.JSON(http.StatusOK, meal_list)
 }
-
 
 //----------------------------------------------------
 //----------------------------------------------------
