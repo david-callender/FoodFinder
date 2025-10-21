@@ -19,7 +19,17 @@ export const getMenu = async (
   mealtime: "breakfast" | "lunch" | "dinner" | "everyday",
   diningHall: string
 ): Promise<MenuData> => {
+  // Purpose : retrieving data for meals given a set of parameters
+  // Args:
+  // date : Date - day for meal data
+  // mealtime : "breakfast" | "lunch" | "dinner" | "everyday" - meal string representing the time of day for the meal
+  // diningHall : string - which dining hall to query menu for
+  // Returns:
+  // {meal: string, is_preferred: bool, id: string}[] - list of meals that matched the given search criteria
+
+  // TODO [backend] : stop returning dummy data
   return [{ id: 20, isPreferred: true, meal: "bana" }];
+
   const searchParams = new URLSearchParams({
     day: day.toISOString(),
     mealtime: mealtime,

@@ -1,13 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { login } from "@/db/login";
 
 import type { FC, FormEvent } from "react";
-
-// for casting when fetching from api
-type User = {
-  access_token: string;
-};
 
 export const LoginBox: FC = () => {
   // Description: email/password text field and login button w/ redirect
@@ -15,16 +13,14 @@ export const LoginBox: FC = () => {
   // use for redirects
   const router = useRouter();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
     // prevents refresh of page
     event.preventDefault();
-
-    // pulling form data
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
 
     // 9/27: endpoint currently assumes all users are valid.
     // At some point, when validation is implemented,
@@ -33,27 +29,11 @@ export const LoginBox: FC = () => {
 
     // request to login endpoint
     // refresh_token cookie is set here
-    const response = await fetch(
-      new URL("/login", process.env.NEXT_PUBLIC_BACKEND_URL),
-      {
-        method: "POST",
-        credentials: "include", // need this for receive cookies w/ cors
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password: password }),
-      }
-    );
+    const response = await login(email, password);
 
-    if (response.ok) {
-      // casting to known type w/ known fields
-      const responseJson = (await response.json()) as User;
-
-      // store access_token in local storage
-      localStorage.setItem("access_token", responseJson.access_token);
-      // redirect
-      router.push("/");
-    } else {
-      console.log(await response.json());
-    }
+    localStorage.setItem("access_token", response.accessToken);
+    // redirect
+    router.push("/");
   }
 
   // final login box component
@@ -62,6 +42,9 @@ export const LoginBox: FC = () => {
       <div className="flex flex-col p-5">
         <input
           type="email"
+          onChange={(e) => {
+            setEmail(e.target.value);
+          }}
           name="email"
           placeholder="Email"
           className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
@@ -69,6 +52,9 @@ export const LoginBox: FC = () => {
         />
         <input
           type="password"
+          onChange={(e) => {
+            setPassword(e.target.value);
+          }}
           name="password"
           placeholder="Password"
           className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"

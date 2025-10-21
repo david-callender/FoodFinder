@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useState } from "react";
 
 // needed for image
-// TODO: should be storing these images in db?
 import filled_heart from "./filled.png";
 import unfilled_heart from "./unfilled.png";
 
