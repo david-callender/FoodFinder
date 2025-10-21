@@ -48,6 +48,8 @@ function removeBlacklistCharacters(phoneNumber: string): string {
 export const SignUpBox: FC = () => {
   const router = useRouter();
 
+  // for when we add display name
+  //const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");

@@ -1,3 +1,4 @@
+import { LinkBar } from "@/components/LinkBar/LinkBar";
 import { MenuManager } from "@/components/MenuManager/MenuManager";
 
 import type { FC, FormEvent } from "react";
@@ -9,7 +10,12 @@ export type HandleMealQueryFunction = (
 ) => void;
 
 export const Menu_Page: FC = () => {
-  return <MenuManager />;
+  return (
+    <>
+      <LinkBar />
+      <MenuManager />
+    </>
+  );
 };
 
 export default Menu_Page;
