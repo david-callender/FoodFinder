@@ -14,26 +14,25 @@ type MenuData = z.output<typeof SCHEMA>;
 
 export type MenuItem = MenuData[number];
 
+// Purpose : retrieving data for meals given a set of parameters
+// Args:
+// date : Date - day for meal data. Must be in YYYY-MM-DD format
+// mealtime : "breakfast" | "lunch" | "dinner" | "everyday" - meal string representing the time of day for the meal
+// diningHall : string - which dining hall to query menu for
+// Returns:
+// {meal: string, isPreferred: bool, id: string}[] - list of meals that matched the given search criteria
 export const getMenu = async (
-  day: Date,
+  day: string,
   mealtime: "breakfast" | "lunch" | "dinner" | "everyday",
   diningHall: string
 ): Promise<MenuData> => {
-  // Purpose : retrieving data for meals given a set of parameters
-  // Args:
-  // date : Date - day for meal data
-  // mealtime : "breakfast" | "lunch" | "dinner" | "everyday" - meal string representing the time of day for the meal
-  // diningHall : string - which dining hall to query menu for
-  // Returns:
-  // {meal: string, isPreferred: bool, id: string}[] - list of meals that matched the given search criteria
-
   const searchParams = new URLSearchParams({
-    day: day.toLocaleDateString("sv"),
+    day,
     mealtime,
     diningHall,
   });
   const response = await fetch(
-    new URL("/get_menu?", process.env.NEXT_PUBLIC_BACKEND_URL).toString() +
+    new URL("/getMenu?", process.env.NEXT_PUBLIC_BACKEND_URL).toString() +
       searchParams.toString()
   );
   const json = (await response.json()) as unknown;
