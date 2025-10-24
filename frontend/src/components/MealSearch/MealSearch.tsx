@@ -43,20 +43,26 @@ export const MealSearch: FC<Props> = ({
       <div className="m-10 grid justify-center">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1">
-            <input
-              type="text"
+            <select
               name="diningHall"
               onChange={(e) => {
+     
                 setDiningHall(e.target.value);
               }}
-              className="m-2 w-50 rounded-xl border-4 bg-white p-0.5 text-black"
-              required
-            ></input>
+              className="m-2 rounded-xl border-5 border-white bg-white p-0.5 text-black"
+            >
+              <option value="62a90bbaa9f13a0e1cac2320">Comstock</option>
+              <option value="6262b663b63f1e1517b6e433">Pioneer</option>
+              <option value="627bbf3bb63f1e0fb3c1691a">17th Ave</option>
+              <option value="627bbf2cb63f1e10059b45a4">Sanford</option>
+              <option value="627bbeb6b63f1e0fa1c9fe7b">Middlebrook</option>
+              <option value="62b21c96a9f13a0ac1472ef1">Bailey</option>
+            </select>
             <input
               type="date"
               name="date"
               onChange={(e) => {
-                console.log(e.target.value);
+           
                 const date = e.target.value;
                 if (date.length === 0) {
                   setDate(undefined);
