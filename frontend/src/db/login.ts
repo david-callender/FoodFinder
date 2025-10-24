@@ -10,15 +10,7 @@ const SCHEMA = z.object({
   accessToken: z.string(),
 });
 
-type LoginData = z.output<typeof SCHEMA>;
-
-// TODO! [misc.] : FIX THIS
-// this is a bandaid solution until the /login endpoint is up and running
-// zod will do the parsing of the response json, then the user will set their access token in local_storage
-// for casting when fetching from api
-export type User = {
-  access_token: string;
-};
+export type LoginData = z.output<typeof SCHEMA>;
 
 export const login = async (
   email: string,
@@ -36,24 +28,16 @@ export const login = async (
     method: "POST",
     credentials: "include", // need this for receive cookies w/ cors
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: email, password: password }), // TODO : FIX This please! username should be email.
+    body: JSON.stringify({ email, password }),
   });
 
-  if (response.ok) {
-    // TODO [misc.] : more fixing here (see export of type User, related)
-    // casting to known type w/ known fields
-    const responseJson = (await response.json()) as User;
-
-    // TODO [backend] : stop returning dummy data
-    return {
-      displayName: "TEMPORARY_NAME",
-      accessToken: responseJson.access_token,
-    };
-  } else {
-    throw new Error("COULD NOT LOGIN");
-  }
-
-  // return username via zod
   const json = (await response.json()) as unknown;
-  return await SCHEMA.parseAsync(json);
+
+  if (response.ok) {
+    return await SCHEMA.parseAsync(json);
+  } else {
+    throw new Error(
+      "Call to /login failed: " + JSON.stringify(json)
+    );
+  }
 };

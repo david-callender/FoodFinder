@@ -27,7 +27,7 @@ import (
 const ACCESS_TOKEN_KEEPALIVE = time.Minute * 7
 const REFRESH_TOKEN_KEEPALIVE = time.Hour * 24 * 10
 
-// user table in the db
+// User table in the db
 type User struct {
 	ID          int
 	Email       string
@@ -35,9 +35,9 @@ type User struct {
 	DisplayName string
 }
 
-type mealWithPreference struct {
+type MealWithPreference struct {
 	Meal         string `json:"meal"`
-	Is_preferred bool   `json:"is_preferred"`
+	IsPreferred bool   `json:"isPreferred"`
 	Id           string `json:"id"`
 }
 
@@ -70,11 +70,11 @@ func connectDB() (*pgxpool.Pool, error) {
 }
 
 // Checks if a user exists in the database by an email
-func EmailExists(db *pgxpool.Pool, uid int) (bool, error) {
+func EmailExists(db *pgxpool.Pool, email string) (bool, error) {
 	var exists bool
 	err := db.QueryRow(context.Background(),
-		"SELECT EXISTS (SELECT 1 FROM users WHERE id=$1)",
-		uid,
+		`SELECT EXISTS (SELECT 1 FROM "Users" WHERE "email"=$1)`,
+		email,
 	).Scan(&exists)
 	if err != nil {
 		return false, err
@@ -84,18 +84,22 @@ func EmailExists(db *pgxpool.Pool, uid int) (bool, error) {
 
 // Adds a new user to the users table
 func AddNewUser(db *pgxpool.Pool, email string, password []byte, displayName string) (int, error) {
+	exists, err := EmailExists(db, email)
+	if err != nil {
+		return -1, nil
+	}
+	if exists {
+		return -1, ErrEmailInUse
+	}
+
 	var id int
-	err := db.QueryRow(context.Background(), `
-        INSERT INTO users (email, password, displayName)
+	err = db.QueryRow(context.Background(), `
+        INSERT INTO "Users" ("email", "password", "displayName")
         VALUES ($1, $2, $3)
-        ON CONFLICT (email) DO NOTHING
-        RETURNING id
+        RETURNING "id";
     `, email, password, displayName).Scan(&id)
 
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return -1, ErrEmailInUse
-		}
 		return -1, err
 	}
 	return id, nil
@@ -108,7 +112,7 @@ func GetByEmail(db *pgxpool.Pool, email string) (*User, error) {
 	user.Email = email
 
 	err := db.QueryRow(context.Background(),
-		"SELECT id, password FROM users WHERE email=$1",
+		`SELECT "id", "password" FROM "Users" WHERE "email"=$1`,
 		email,
 	).Scan(&user.ID, &user.Password)
 
@@ -216,7 +220,7 @@ func (s *Server) GetMenu(c *gin.Context) {
 	//Method: GET
 
 	day := c.Query("day")
-	dining_hall := c.Query("dining_hall")
+	dining_hall := c.Query("diningHall")
 	mealtime := c.Query("mealtime")
 
 	// GetMenuById requires a time.Time so we have to parse the day
@@ -235,11 +239,11 @@ func (s *Server) GetMenu(c *gin.Context) {
 
 	// This has to be done because the Meal struct doesn't have preferences and has
 	// different field names than what the frontend expects.
-	meal_list := make([]mealWithPreference, 0, 20)
+	meal_list := make([]MealWithPreference, 0, 20)
 	for _, option := range menu.Options {
-		meal_list = append(meal_list, mealWithPreference{
+		meal_list = append(meal_list, MealWithPreference{
 			Meal:         option.Name,
-			Is_preferred: false,
+			IsPreferred: false,
 			Id:           option.Id,
 		})
 	}
@@ -264,7 +268,7 @@ func (s *Server) Refresh(c *gin.Context) {
 
 	token_data, err := verifyToken(refresh_cookie, jwt_refresh_key)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"detail": "token vefication failed"})
+		c.JSON(http.StatusForbidden, gin.H{"detail": "token verification failed"})
 		return
 	}
 
@@ -307,6 +311,7 @@ func (s *Server) Login(c *gin.Context) {
 
 	user_result, err := GetByEmail(s.DB, login_account.Email)
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
 		return
 	}
@@ -329,8 +334,8 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"access_token": access,
-		"display_name": user_result.DisplayName,
+		"accessToken": access,
+		"displayName": user_result.DisplayName,
 	})
 }
 
@@ -355,7 +360,7 @@ func (s *Server) Signup(c *gin.Context) {
 	var register_account struct {
 		Email       string `json:"email" binding:"required"`
 		Password    string `json:"password" binding:"required"`
-		DisplayName string `json:"display_name" binding:"required"`
+		DisplayName string `json:"displayName" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&register_account); err != nil {
@@ -379,6 +384,7 @@ func (s *Server) Signup(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"detail": "Email address is already in use"})
 			return
 		}
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
 		return
 	}
@@ -391,7 +397,7 @@ func (s *Server) Signup(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"access_token": access,
+		"accessToken": access,
 	})
 }
 
@@ -438,7 +444,7 @@ func main() {
 	//	location: string (dineoncampus location ID)
 	//	mealtime: string ("breakfast", "lunch", "dinner", or "everyday")
 	//	day: string (YYYY-MM-DD)
-	router.GET("/getmenu", s.GetMenu)
+	router.GET("/getMenu", s.GetMenu)
 
 	router.Run("localhost:8080")
 }

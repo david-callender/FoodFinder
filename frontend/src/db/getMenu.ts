@@ -4,7 +4,7 @@ import * as z from "zod";
 
 const SCHEMA = z.array(
   z.object({
-    id: z.number(),
+    id: z.string(),
     meal: z.string(),
     isPreferred: z.boolean(),
   })
@@ -25,20 +25,22 @@ export const getMenu = async (
   // mealtime : "breakfast" | "lunch" | "dinner" | "everyday" - meal string representing the time of day for the meal
   // diningHall : string - which dining hall to query menu for
   // Returns:
-  // {meal: string, is_preferred: bool, id: string}[] - list of meals that matched the given search criteria
-
-  // TODO [backend] : stop returning dummy data
-  return [{ id: 20, isPreferred: true, meal: "bana" }];
+  // {meal: string, isPreferred: bool, id: string}[] - list of meals that matched the given search criteria
 
   const searchParams = new URLSearchParams({
-    day: day.toISOString(),
-    mealtime: mealtime,
-    dining_hall: diningHall,
+    day: day.toLocaleDateString("sv"),
+    mealtime,
+    diningHall,
   });
   const response = await fetch(
     new URL("/get_menu?", process.env.NEXT_PUBLIC_BACKEND_URL).toString() +
       searchParams.toString()
   );
   const json = (await response.json()) as unknown;
-  return await SCHEMA.parseAsync(json);
+
+  if (response.ok) {
+    return await SCHEMA.parseAsync(json);
+  } else {
+    throw new Error("Call to /getMenu failed :" + JSON.stringify(json));
+  }
 };

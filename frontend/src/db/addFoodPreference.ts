@@ -8,14 +8,15 @@ export const addFoodPreference = async (meal: string): Promise<void> => {
   // void - posting data to server
 
   const foodPreferenceURL = new URL(
-    "/add_food_preference",
+    "/addFoodPreference",
     process.env.NEXT_PUBLIC_BACKEND_URL
   );
   const response = await fetch(foodPreferenceURL, {
     method: "POST",
-    body: JSON.stringify({ value: meal }),
+    body: JSON.stringify({ meal }),
   });
   if (!response.ok) {
-    throw new Error("Invalid Request");
+    const json = (await response.json()) as unknown;
+    throw new Error("Call to /addFoodPreference failed: " + JSON.stringify(json));
   }
 };

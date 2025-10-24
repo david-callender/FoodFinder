@@ -84,11 +84,11 @@ export const SignUpBox: FC = () => {
     event.preventDefault();
 
     const displayName = "Temporary"; // TODO [misc.] : add displayName field to signup form so user can give their own usernames
-    console.log(displayName); // to make linter happy
+    // console.log(displayName); // to make linter happy
 
     // request to login endpoint
     // refresh_token cookie is set here
-    const response = await signup(email, password);
+    const response = await signup(email, password, displayName);
 
     //  TODO [backend] : Handling a "user exists" error from backend (or if they already have cookies)
     // TODO [misc.] : Handle User phone numbers without a US country code
