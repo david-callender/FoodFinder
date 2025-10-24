@@ -59,6 +59,7 @@ func generateMessages(notificationTable map[int][]mealNotification, emailTable m
 		message.From(NOTIFIER_EMAIL)
 		message.ToFromString(emailTable[userId])
 		message.Subject(NOTIFICATION_SUBJECT)
+		message.SetBulk()
 		messageBody := fmt.Sprintf("Some of your favorite foods are available today!\n\n")
 		for _, notif := range notifs {
 			messageBody += fmt.Sprintf(
