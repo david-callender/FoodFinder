@@ -13,6 +13,7 @@ export const logout = async (): Promise<void> => {
     method: "POST",
   });
   if (!response.ok) {
-    throw new Error("UNABLE TO LOGOUT");
+    const json = (await response.json()) as unknown;
+    throw new Error("Call to /logout failed: " + JSON.stringify(json));
   }
 };

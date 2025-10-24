@@ -4,7 +4,7 @@ import type { FC, FormEvent } from "react";
 
 type Props = {
   setDiningHall: (diningHall: string) => void;
-  setDate: (date: Date | undefined) => void;
+  setDate: (date: string | undefined) => void;
   setTime: (time: "breakfast" | "lunch" | "dinner" | "everyday") => void;
   handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
 };
@@ -56,8 +56,9 @@ export const MealSearch: FC<Props> = ({
               type="date"
               name="date"
               onChange={(e) => {
-                const date = new Date(e.target.value);
-                if (Number.isNaN(+date)) {
+                console.log(e.target.value);
+                const date = e.target.value;
+                if (date.length === 0) {
                   setDate(undefined);
                 } else {
                   setDate(date);
