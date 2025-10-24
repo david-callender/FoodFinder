@@ -6,6 +6,9 @@ import Image from "next/image";
 import { useState } from "react";
 
 // needed for image
+import { addFoodPreference } from "@/db/addFoodPreference";
+import { removeFoodPreference } from "@/db/removeFoodPreference";
+
 import filled_heart from "./filled.png";
 import unfilled_heart from "./unfilled.png";
 
@@ -16,29 +19,33 @@ import type { FC } from "react";
 
 type Props = {
   item: MenuItem;
-  setPreference: SetPreferenceFunction;
+  handlePreferenceChange: SetPreferenceFunction;
 };
 
-export const LikeButton: FC<Props> = ({ item, setPreference }) => {
+export const LikeButton: FC<Props> = ({ item, handlePreferenceChange }) => {
   // Description : like button in menu table
 
   // setting state
   const [liked, setLiked] = useState(item.isPreferred);
 
   // updating liked value
-  function postLike(item: MenuItem): void {
+  async function postLike(item: MenuItem): Promise<void> {
+    const dbCall = item.isPreferred ? removeFoodPreference : addFoodPreference;
+
+    await dbCall(item.meal);
+
     // automatically setting like button state to opposite of current state.
     // Should not need to call this function otherwise.
     setLiked(!item.isPreferred);
     // setting preference in parent Menu component on item.
-    setPreference(item);
+    handlePreferenceChange(item);
   }
 
   // like button
   const like = (
     <button
-      onClick={() => {
-        postLike(item);
+      onClick={async () => {
+        await postLike(item);
       }}
     >
       <Image
@@ -52,8 +59,8 @@ export const LikeButton: FC<Props> = ({ item, setPreference }) => {
   // not liked button
   const notLiked = (
     <button
-      onClick={() => {
-        postLike(item);
+      onClick={async () => {
+        await postLike(item);
       }}
     >
       <Image

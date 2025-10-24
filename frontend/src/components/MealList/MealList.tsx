@@ -6,10 +6,10 @@ import type { FC } from "react";
 
 type Props = {
   items: MenuItem[];
-  setPreference: SetPreferenceFunction;
+  handlePreferenceChange: SetPreferenceFunction;
 };
 
-export const MealList: FC<Props> = ({ items, setPreference }) => {
+export const MealList: FC<Props> = ({ items, handlePreferenceChange }) => {
   {
     return (
       <>
@@ -17,7 +17,10 @@ export const MealList: FC<Props> = ({ items, setPreference }) => {
           <div key={item.id} className="grid grid-cols-2 items-center">
             <div className="p-5">{item.meal}</div>
             <div className="p-5">
-              <LikeButton item={item} setPreference={setPreference} />
+              <LikeButton
+                item={item}
+                handlePreferenceChange={handlePreferenceChange}
+              />
             </div>
           </div>
         ))}
