@@ -17,6 +17,8 @@ export const addFoodPreference = async (meal: string): Promise<void> => {
   });
   if (!response.ok) {
     const json = (await response.json()) as unknown;
-    throw new Error("Call to /addFoodPreference failed: " + JSON.stringify(json));
+    throw new Error(
+      "Call to /addFoodPreference failed: " + JSON.stringify(json)
+    );
   }
 };

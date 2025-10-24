@@ -19,7 +19,7 @@ export const MenuManager: FC = () => {
   const [diningHall, setDiningHall] = useState<string | undefined>();
   const [date, setDate] = useState<string | undefined>();
   const [time, setTime] = useState<
-    "breakfast" | "lunch" | "dinner" | "everyday" 
+    "breakfast" | "lunch" | "dinner" | "everyday"
     // set default to breakfast here because it's the first option in our drop down menu
     // and if we don't, and the user never selects a mealtime, then the field
     // is null/empty string in our query

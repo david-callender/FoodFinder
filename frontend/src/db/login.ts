@@ -36,8 +36,6 @@ export const login = async (
   if (response.ok) {
     return await SCHEMA.parseAsync(json);
   } else {
-    throw new Error(
-      "Call to /login failed: " + JSON.stringify(json)
-    );
+    throw new Error("Call to /login failed: " + JSON.stringify(json));
   }
 };

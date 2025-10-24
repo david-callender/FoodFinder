@@ -1,11 +1,8 @@
-// converts components to client components
 "use client";
 
 import Image from "next/image";
-// for state management in components
 import { useState } from "react";
 
-// needed for image
 import { addFoodPreference } from "@/db/addFoodPreference";
 import { removeFoodPreference } from "@/db/removeFoodPreference";
 
@@ -14,7 +11,6 @@ import unfilled_heart from "./unfilled.png";
 
 import type { SetPreferenceFunction } from "../Menu/Menu";
 import type { MenuItem } from "@/db/getMenu";
-// components must be of shape FC
 import type { FC } from "react";
 
 type Props = {

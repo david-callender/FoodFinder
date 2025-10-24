@@ -26,11 +26,10 @@ export const LinkBar: FC = () => {
             className="justify-self-center"
           />
 
-
           <div className="self-center justify-self-end">
             <Link
               href="/login"
-              className="rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700 mr-2"
+              className="mr-2 rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700"
             >
               Login
             </Link>
