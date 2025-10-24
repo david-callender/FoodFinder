@@ -249,6 +249,40 @@ func (s *Server) GetMenu(c *gin.Context) {
 	c.JSON(http.StatusOK, meal_list)
 }
 
+func (s *Server) addFoodPreference(c *gin.Context) {
+	var foodPreference struct {
+		Meal string `json:"meal" binding:"required"`
+	}
+
+	err := c.ShouldBindJSON(&foodPreference)
+
+	if err != nil {
+		fmt.Println("/addFoodPreference: meal required: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "meal required"})
+		return
+	}
+
+	fmt.Println("adding preference: ", foodPreference.Meal)
+	c.Status(http.StatusOK)
+}
+
+func (s *Server) removeFoodPreference(c *gin.Context) {
+	var foodPreference struct {
+		Meal string `json:"meal" binding:"required"`
+	}
+
+	err := c.ShouldBindJSON(&foodPreference)
+
+	if err != nil {
+		fmt.Println("/removeFoodPreference: meal required: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "meal required"})
+		return
+	}
+
+	fmt.Println("removing preference: ", foodPreference.Meal)
+	c.Status(http.StatusOK)
+}
+
 //----------------------------------------------------
 //----------------------------------------------------
 //---------------START-OF-API-ENDPOINTS---------------
@@ -452,6 +486,8 @@ func main() {
 	//	mealtime: string ("breakfast", "lunch", "dinner", or "everyday")
 	//	day: string (YYYY-MM-DD)
 	router.GET("/getMenu", s.GetMenu)
+	router.POST("/addFoodPreference", s.addFoodPreference)
+	router.POST("/removeFoodPreference", s.removeFoodPreference)
 
 	router.Run("localhost:8080")
 }
