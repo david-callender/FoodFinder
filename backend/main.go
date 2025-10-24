@@ -470,7 +470,7 @@ func main() {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost"}, // Next.js origin
+		AllowOrigins:     []string{"http://localhost:8080"}, // Next.js origin
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
