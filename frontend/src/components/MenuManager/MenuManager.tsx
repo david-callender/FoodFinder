@@ -16,7 +16,9 @@ export const MenuManager: FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
   // state for query
-  const [diningHall, setDiningHall] = useState<string | undefined>();
+  
+  // diningHallID for comstock (default option in dropdown) 
+  const [diningHall, setDiningHall] = useState<string>("62a90bbaa9f13a0e1cac2320");
   const [date, setDate] = useState<string | undefined>();
   const [time, setTime] = useState<
     "breakfast" | "lunch" | "dinner" | "everyday"
@@ -28,7 +30,7 @@ export const MenuManager: FC = () => {
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     // Description : handling submit of search query
     e.preventDefault();
-    if (diningHall === undefined || date === undefined) {
+    if (date === undefined) {
       setError("something was undefined");
       return;
     }
