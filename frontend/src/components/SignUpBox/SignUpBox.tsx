@@ -10,7 +10,7 @@ import type { ChangeEvent, FC, FormEvent } from "react";
 function wrapPhoneNumber(phoneNumber: string): string {
   // Purpose: to mask phone number in input component
   // Args:
-  // phoneNumber: string - string representing a 10 digit phone nummber
+  // phoneNumber: string - string representing a 10 digit phone number
   // Returns:
   // string - formatted phone number of (XXX) - XXX - XXXX for masking in an input component
 
@@ -28,9 +28,9 @@ function wrapPhoneNumber(phoneNumber: string): string {
 function removeBlacklistCharacters(phoneNumber: string): string {
   // Purpose: to remove non digit and extraneous characters from an input phone number
   // Args:
-  // phoneNumber: string - string representing a 10 digit phone nummber
+  // phoneNumber: string - string representing a 10 digit phone number
   // Returns:
-  // string - <= 10 character string representing a possible phonenumber
+  // string - <= 10 character string representing a possible phone number
 
   // matches non-digit characters
   const blacklistRegex = /[^0-9]/g;
@@ -103,37 +103,39 @@ export const SignUpBox: FC = () => {
       <div className="flex flex-col">
         <input
           type="email"
+          value={email}
           onChange={(e) => {
             setEmail(e.target.value);
           }}
-          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg bg-gray-800 p-2"
           name="email"
           placeholder="Email"
           required
         />
         <input
           type="password"
+          value={password}
           onChange={(e) => {
             setPassword(e.target.value);
           }}
-          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg bg-gray-800 p-2"
           name="password"
           placeholder="Password"
           required
         />
         <input
           type="tel"
+          value={phoneNumber}
           onChange={(e) => {
             changePhoneNumber(e);
           }}
-          value={phoneNumber}
-          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
+          className="m-3 place-self-center rounded-lg bg-gray-800 p-2"
           name="phone-number"
           placeholder="XXX-XXX-XXXX"
           required
         />
-        <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
-          Sign Up!
+        <button className="mx-auto rounded-xl bg-red-900 px-4 py-2 font-semibold shadow transition hover:cursor-pointer hover:bg-red-700">
+          Sign Up
         </button>
         <p className="m-2 place-self-center text-xs">
           Already have an account?{" "}

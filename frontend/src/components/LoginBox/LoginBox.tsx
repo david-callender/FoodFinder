@@ -42,26 +42,28 @@ export const LoginBox: FC = () => {
       <div className="flex flex-col p-5">
         <input
           type="email"
+          value={email}
           onChange={(e) => {
             setEmail(e.target.value);
           }}
           name="email"
           placeholder="Email"
-          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
+          className="m-3 w-60 place-self-center rounded-lg bg-gray-800 p-2"
           required
         />
         <input
           type="password"
+          value={password}
           onChange={(e) => {
             setPassword(e.target.value);
           }}
           name="password"
           placeholder="Password"
-          className="m-3 place-self-center rounded-lg border-4 border-gray-200 bg-gray-200 p-0.5 text-black"
+          className="m-3 w-60 place-self-center rounded-lg bg-gray-800 p-2"
           required
         />
-        <button className="mx-auto w-40 bg-gray-200 text-black hover:bg-gray-300">
-          login
+        <button className="mx-auto rounded-xl bg-red-900 px-4 py-2 font-semibold shadow transition hover:cursor-pointer hover:bg-red-700">
+          Login
         </button>
         <p className="m-2 place-self-center text-xs">
           Don&apos;t have an account?{" "}
