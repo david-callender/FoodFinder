@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { getMenu } from "@/db/getMenu";
 
-import { MealSearch, getCurrentDate } from "../MealSearch/MealSearch";
+import { getCurrentDate, MealSearch } from "../MealSearch/MealSearch";
 import { Menu } from "../Menu/Menu";
 
 import type { MenuItem } from "@/db/getMenu";

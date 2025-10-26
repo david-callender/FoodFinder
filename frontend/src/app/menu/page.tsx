@@ -11,9 +11,6 @@ export type HandleMealQueryFunction = (
 ) => void;
 
 export const Menu_Page: FC = () => {
-  const d = new Date();
-
-  console.log("todays date: " + d.getFullYear() + d.getMonth() + d.getDate());
   return (
     <>
       <div className="fixed inset-0 -z-10">
