@@ -14,7 +14,6 @@ export const Menu_Page: FC = () => {
   return (
     <>
       <div className="fixed inset-0 -z-10">
-        
         {/* Optional dark overlay to make text pop */}
         <MainBackground />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>

@@ -52,8 +52,10 @@ export const MealSearch: FC<Props> = ({
           <div className="space-y-4">
             <select
               name="diningHall"
-              onChange={(e) => setDiningHall(e.target.value)}
-              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black placeholder-gray-500 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onChange={(e) => {
+                setDiningHall(e.target.value);
+              }}
+              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black placeholder-gray-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             >
               <option value="62a90bbaa9f13a0e1cac2320">Comstock</option>
               <option value="6262b663b63f1e1517b6e433">Pioneer</option>
@@ -71,13 +73,15 @@ export const MealSearch: FC<Props> = ({
                 const date = e.target.value;
                 setDate(date.length === 0 ? undefined : date);
               }}
-              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
 
             <select
               name="time"
-              onChange={(e) => changeTime(e.target.value)}
-              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onChange={(e) => {
+                changeTime(e.target.value);
+              }}
+              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             >
               <option value="breakfast">Breakfast</option>
               <option value="lunch">Lunch</option>

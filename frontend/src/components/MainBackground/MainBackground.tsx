@@ -16,7 +16,6 @@ export const MainBackground: FC = () => {
           style={{ objectFit: "cover" }}
         />
       </div>
-    )
-    
+    );
   }
 };

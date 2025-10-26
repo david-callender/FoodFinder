@@ -16,9 +16,11 @@ export const MenuManager: FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
   // state for query
-  
-  // diningHallID for comstock (default option in dropdown) 
-  const [diningHall, setDiningHall] = useState<string>("62a90bbaa9f13a0e1cac2320");
+
+  // diningHallID for comstock (default option in dropdown)
+  const [diningHall, setDiningHall] = useState<string>(
+    "62a90bbaa9f13a0e1cac2320"
+  );
   const [date, setDate] = useState<string | undefined>();
   const [time, setTime] = useState<
     "breakfast" | "lunch" | "dinner" | "everyday"
@@ -41,7 +43,7 @@ export const MenuManager: FC = () => {
   return (
     <>
       <div className="flex justify-center">
-        <div className="w-1/2 flex flex-col">
+        <div className="flex w-1/2 flex-col">
           <MealSearch
             setDiningHall={setDiningHall}
             setDate={setDate}
@@ -49,13 +51,11 @@ export const MenuManager: FC = () => {
             handleSubmit={handleSubmit}
           />
           <p>{error}</p>
-          <div className="bg-white/10 p-12 rounded-3xl">
+          <div className="rounded-3xl bg-white/10 p-12">
             <Menu items={menuItems} />
           </div>
         </div>
       </div>
-
-        
     </>
   );
 };
