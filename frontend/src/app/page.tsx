@@ -23,8 +23,7 @@ const Home: FC = () => {
           Gopher Grub
         </h1>
         <p className="mb-8 max-w-lg text-xl text-gray-100">
-          Explore campus dining menus, find your favorite meals, and never miss
-          taco night again.
+          Get notified about your favorite dining hall meals
         </p>
         <a
           href="/menu"
