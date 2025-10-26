@@ -9,6 +9,15 @@ type Props = {
   handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
 };
 
+export function getCurrentDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+}
+
 export const MealSearch: FC<Props> = ({
   setDiningHall,
   setDate,
@@ -68,6 +77,7 @@ export const MealSearch: FC<Props> = ({
             <input
               type="date"
               name="date"
+              value={getCurrentDate()}
               required
               onChange={(e) => {
                 const date = e.target.value;
