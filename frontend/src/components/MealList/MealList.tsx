@@ -14,9 +14,14 @@ export const MealList: FC<Props> = ({ items, handlePreferenceChange }) => {
     return (
       <>
         {items.map((item: MenuItem) => (
-          <div key={item.id} className="grid grid-cols-2 items-center">
-            <div className="p-5">{item.meal}</div>
-            <div className="p-5">
+          <div
+            key={item.id}
+            className="m-3 grid grid-cols-2 items-center rounded-2xl bg-black/40 p-4 shadow-sm transition-all duration-200 hover:bg-black/30 hover:shadow-md"
+          >
+            <div className="pl-2 text-lg font-medium text-white/90">
+              {item.meal}
+            </div>
+            <div className="flex justify-end pr-2">
               <LikeButton
                 item={item}
                 handlePreferenceChange={handlePreferenceChange}

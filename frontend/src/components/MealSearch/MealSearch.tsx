@@ -40,16 +40,22 @@ export const MealSearch: FC<Props> = ({
 
   return (
     <>
-      <div className="m-10 grid justify-center">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1">
+      <div className="m-10 flex justify-center">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md rounded-2xl bg-white/10 p-6 shadow-lg backdrop-blur-md transition-all duration-300 hover:shadow-xl"
+        >
+          <h2 className="mb-4 text-center text-2xl font-semibold text-white">
+            Search Menu
+          </h2>
+
+          <div className="space-y-4">
             <select
               name="diningHall"
               onChange={(e) => {
-     
                 setDiningHall(e.target.value);
               }}
-              className="m-2 rounded-xl border-5 border-white bg-white p-0.5 text-black"
+              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black placeholder-gray-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             >
               <option value="62a90bbaa9f13a0e1cac2320">Comstock</option>
               <option value="6262b663b63f1e1517b6e433">Pioneer</option>
@@ -58,34 +64,37 @@ export const MealSearch: FC<Props> = ({
               <option value="627bbeb6b63f1e0fa1c9fe7b">Middlebrook</option>
               <option value="62b21c96a9f13a0ac1472ef1">Bailey</option>
             </select>
+
             <input
               type="date"
               name="date"
-              onChange={(e) => {
-           
-                const date = e.target.value;
-                if (date.length === 0) {
-                  setDate(undefined);
-                } else {
-                  setDate(date);
-                }
-              }}
-              className="m-2 w-50 rounded-xl border-4 bg-white p-0.5 text-black"
               required
-            ></input>
+              onChange={(e) => {
+                const date = e.target.value;
+                setDate(date.length === 0 ? undefined : date);
+              }}
+              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+
             <select
               name="time"
-              className="m-2 rounded-xl border-5 border-white bg-white p-0.5 text-black"
               onChange={(e) => {
                 changeTime(e.target.value);
               }}
+              className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             >
               <option value="breakfast">Breakfast</option>
               <option value="lunch">Lunch</option>
               <option value="dinner">Dinner</option>
               <option value="everyday">Everyday</option>
             </select>
-            <button className="m-2">Search</button>
+
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-blue-500 px-4 py-2 font-semibold text-white shadow-md transition-all duration-200 hover:bg-blue-600 hover:shadow-lg"
+            >
+              Search
+            </button>
           </div>
         </form>
       </div>
