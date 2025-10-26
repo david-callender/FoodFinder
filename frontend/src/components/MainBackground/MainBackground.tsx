@@ -7,13 +7,16 @@ import type { FC } from "react";
 export const MainBackground: FC = () => {
   {
     return (
-      <Image
-        src={pioneer}
-        alt="Background"
-        fill
-        priority
-        className="-z-10 object-cover object-center"
-      />
-    );
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src={pioneer}
+          alt="Background"
+          fill
+          priority
+          style={{ objectFit: "cover" }}
+        />
+      </div>
+    )
+    
   }
 };

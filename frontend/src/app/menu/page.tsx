@@ -1,4 +1,5 @@
 import { LinkBar } from "@/components/LinkBar/LinkBar";
+import { MainBackground } from "@/components/MainBackground/MainBackground";
 import { MenuManager } from "@/components/MenuManager/MenuManager";
 
 import type { FC, FormEvent } from "react";
@@ -12,6 +13,12 @@ export type HandleMealQueryFunction = (
 export const Menu_Page: FC = () => {
   return (
     <>
+      <div className="fixed inset-0 -z-10">
+        
+        {/* Optional dark overlay to make text pop */}
+        <MainBackground />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      </div>
       <LinkBar />
       <MenuManager />
     </>

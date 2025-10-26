@@ -40,14 +40,22 @@ export const MenuManager: FC = () => {
 
   return (
     <>
-      <MealSearch
-        setDiningHall={setDiningHall}
-        setDate={setDate}
-        setTime={setTime}
-        handleSubmit={handleSubmit}
-      />
-      <p>{error}</p>
-      <Menu items={menuItems} />
+      <div className="flex justify-center">
+        <div className="w-1/2 flex flex-col">
+          <MealSearch
+            setDiningHall={setDiningHall}
+            setDate={setDate}
+            setTime={setTime}
+            handleSubmit={handleSubmit}
+          />
+          <p>{error}</p>
+          <div className="bg-white/10 p-12 rounded-3xl">
+            <Menu items={menuItems} />
+          </div>
+        </div>
+      </div>
+
+        
     </>
   );
 };
