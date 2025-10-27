@@ -21,7 +21,7 @@ export const MenuManager: FC = () => {
   const [diningHall, setDiningHall] = useState<string>(
     "62a90bbaa9f13a0e1cac2320"
   );
-  const [date, setDate] = useState<string | undefined>(getCurrentDate());
+  const [date, setDate] = useState<string>(getCurrentDate());
   const [time, setTime] = useState<
     "breakfast" | "lunch" | "dinner" | "everyday"
     // set default to breakfast here because it's the first option in our drop down menu
@@ -32,10 +32,7 @@ export const MenuManager: FC = () => {
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     // Description : handling submit of search query
     e.preventDefault();
-    if (date === undefined) {
-      setError("date was undefined");
-      return;
-    }
+  
 
     setMenuItems(await getMenu(date, time, diningHall));
   }

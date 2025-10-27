@@ -4,7 +4,7 @@ import type { FC, FormEvent } from "react";
 
 type Props = {
   setDiningHall: (diningHall: string) => void;
-  setDate: (date: string | undefined) => void;
+  setDate: (date: string) => void;
   setTime: (time: "breakfast" | "lunch" | "dinner" | "everyday") => void;
   handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
 };
@@ -81,7 +81,7 @@ export const MealSearch: FC<Props> = ({
               required
               onChange={(e) => {
                 const date = e.target.value;
-                setDate(date.length === 0 ? undefined : date);
+                setDate(date);
               }}
               className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
