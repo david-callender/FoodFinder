@@ -104,7 +104,7 @@ func GetFoodBuildings(siteId string) ([]FoodBuilding, error) {
 // the name of a location, and a dineoncampus site ID, and returns the location
 // ID corresponding to that location. Names are case-insensitive
 func GetLocationIdByName(buildingName, locationName, siteId string) (string, error) {
-	var locationId string = ""
+	var locationId string
 
 	buildingName = strings.ToLower(buildingName)
 	locationName = strings.ToLower(locationName)
@@ -154,8 +154,8 @@ func GetMenuByName(buildingName, locationName, periodName, siteId string, date t
 // representing a calendar date. Returns a Menu populated with the options from
 // dineoncampus.
 func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
-	var menu Menu = Menu{Options: []Meal{}}
-	var periodId string = ""
+	menu := Menu{Options: []Meal{}}
+	var periodId string
 
 	dateFormatted := date.Format("2006-01-02")
 	periodIds, err := getPeriodIds(locationId, date)
@@ -221,7 +221,7 @@ func GetMenuById(locationId, periodName string, date time.Time) (Menu, error) {
 // dinner, and everyday menus. These IDs may only be used once each.
 func getPeriodIds(locationId string, date time.Time) (periodIdSpec, error) {
 	// This has to be defined up here in case of an error so we have a 0 value
-	var periodIds periodIdSpec = periodIdSpec{}
+	var periodIds periodIdSpec
 
 	dateFormatted := date.Format("2006-01-02")
 	apifunc := dineocaddress +
@@ -265,7 +265,11 @@ func getPeriodIds(locationId string, date time.Time) (periodIdSpec, error) {
 // makeDineocApiCall(apiurl): make a GET request to apiurl, and return the
 // body of the response.
 func makeDineocApiCall(apiurl string) ([]byte, error) {
+	// Defining the nil error ahead of time so we may catch errors from
+	// the deferred function.
+	var err error
 	req, err := newDineocApiRequest(apiurl, "GET")
+
 	if err != nil {
 		return nil, err
 	}
@@ -275,14 +279,16 @@ func makeDineocApiCall(apiurl string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return body, nil
+	return body, err
 }
 
 // newDineocApiRequest(apiurl, method): return a http request to the given apiurl
