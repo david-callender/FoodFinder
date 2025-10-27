@@ -22,6 +22,11 @@ const NOTIFICATION_SUBJECT = "GopherGrub Notification"
 const TIME_DAY = 24 * time.Hour
 const UMN_SITE_ID = "61d7515eb63f1e0e970debbei"
 
+// Errors
+var errNoConnString = errors.New("notifier: DATABASE_URL is not set, we cannot connect to the database")
+var errNoEmail = errors.New("notifier: NOTIFIER_EMAIL is not set, we don't have an email address")
+var errNoPass = errors.New("notifier: NOTIFIER_PASSWORD is not set, we cannot authenticate with no password")
+
 // Types
 type mealNotification struct {
 	user     int
@@ -37,6 +42,10 @@ type mealNotification struct {
 // the notifyUsers function with the extracted values.
 func main() {
 	connString := os.Getenv("DATABASE_URL")
+	if connString == "" {
+		log.Fatalln(errNoConnString)
+	}
+
 	conn, err := pgx.Connect(context.Background(), connString)
 	if err != nil {
 		log.Fatalln(err)
@@ -180,10 +189,18 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 // its email address and password from the environment, and uses the credentials
 // to send all of the messages. Returns non-nil error on failure.
 func sendMessages(messages []*mail.Msg) error {
+	notifierEmail := os.Getenv("NOTIFIER_EMAIL")
+	if notifierEmail == "" {
+		return errNoEmail
+	}
+	notifierPassword := os.Getenv("NOTIFIER_PASSWORD")
+	if notifierPassword == "" {
+		return errNoPass
+	}
 	mailer, err := mail.NewClient(
 		EMAIL_HOST,
-		mail.WithUsername(os.Getenv("NOTIFIER_EMAIL")),
-		mail.WithPassword(os.Getenv("NOTIFIER_PASSWORD")),
+		mail.WithUsername(notifierEmail),
+		mail.WithPassword(notifierPassword),
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),
 	)
 	if err != nil {

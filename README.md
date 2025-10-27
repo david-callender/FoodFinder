@@ -62,6 +62,16 @@ In bash, you can use the following command:
 Other *nix shells will have similar syntax, if you aren't using bash then you can
 look up specific methods to set variables in your particular shell.
 
+### Notifier
+The module `notifier` located at `/notifier` from the root of the project
+reads its sending address as `NOTIFIER_EMAIL`, its SMTP password as
+`NOTIFIER_PASSWORD`, and the database connection string as `DATABASE_URL`. The
+notifier should not generally be run from dev machines without prior discussion.
+However, you must make sure to set these environment variables before running
+it or else you will get an error.
+
+Make sure run `go get .` in the `notifier` directory as well.
+
 ### Getting started
 
 -   Install Go.
