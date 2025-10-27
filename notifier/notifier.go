@@ -17,7 +17,6 @@ import (
 var mealtimeIndexer [4]string = [4]string{"breakfast", "lunch", "dinner", "every day"}
 
 const EMAIL_HOST string = "<EMAIL_SERVER_HOSTNAME>"
-const NOTIFIER_EMAIL string = "<EMAIL>@<DOMAIN>.<EXTENSION>"
 const NOTIFICATION_SUBJECT string = "GopherGrub Notification"
 const TIME_DAY time.Duration = 24 * time.Hour
 const UMN_SITE_ID string = "61d7515eb63f1e0e970debbei"
@@ -150,7 +149,7 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 func sendMessages(messages []*mail.Msg) error {
 	mailer, err := mail.NewClient(
 		EMAIL_HOST,
-		mail.WithUsername(NOTIFIER_EMAIL),
+		mail.WithUsername(os.Getenv("NOTIFIER_EMAIL")),
 		mail.WithPassword(os.Getenv("NOTIFIER_PASSWORD")),
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),
 	)
