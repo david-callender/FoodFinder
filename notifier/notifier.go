@@ -39,20 +39,17 @@ func main() {
 	connString := os.Getenv("DATABASE_URL")
 	conn, err := pgx.Connect(context.Background(), connString)
 	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 
 	notifyTime, err := time.Parse("2006-01-02", os.Args[1])
 	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 
 	err = notifyUsers(conn, notifyTime)
 	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 
 	os.Exit(0)
