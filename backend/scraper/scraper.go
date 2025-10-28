@@ -55,6 +55,9 @@ func getLocations(siteId string) ([]docclient.Restaurant, error) {
 // and a date. It removes all old menu data for the menu corresponding to these
 // parameters, and fills in new menu data if it exists.
 func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date time.Time) error {
+	// Predefining the nil error to ensure err exists
+	var err error
+
 	// Fetch the menu data for insertion into the DB
 	menu, err := docclient.GetMenuById(locationId, periodName, date)
 	if err != nil {
@@ -85,7 +88,9 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	}
 	// This can be safely done since transaction.Rollback returns an error
 	// once the transaction has been closed.
-	defer transaction.Rollback(context.Background())
+	defer func() {
+		err = transaction.Rollback(context.Background())
+	}()
 
 	_, err = transaction.Exec(
 		context.Background(),
@@ -122,7 +127,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	}
 
 	// If all goes well, we simply return no error.
-	return nil
+	return err
 }
 
 // EXPORTED FUNCTIONS FOR USE BY IMPORTING CODE
