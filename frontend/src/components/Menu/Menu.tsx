@@ -41,7 +41,11 @@ export const Menu: FC<Props> = ({ items: items_in }) => {
     ]);
   };
 
-  return (
+  return preferred.length === 0 && notPreferred.length === 0 ? (
+    <>
+      <div className="grid justify-center">No Data</div>
+    </>
+  ) : (
     <>
       <div className="grid justify-center">
         <div className="min-h-10 rounded-xl border border-white">

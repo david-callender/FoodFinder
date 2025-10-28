@@ -32,10 +32,13 @@ export const MenuManager: FC = () => {
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     // Description : handling submit of search query
     e.preventDefault();
+<<<<<<< Updated upstream
     if (date === undefined) {
       setError("something was undefined");
       return;
     }
+=======
+>>>>>>> Stashed changes
 
     setMenuItems(await getMenu(date, time, diningHall));
   }
