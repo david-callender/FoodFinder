@@ -14,6 +14,14 @@ import (
 
 // I'd like this to be a constant but constant arrays don't exist in go.
 var mealtimeIndexer [4]string = [4]string{"breakfast", "lunch", "dinner", "everyday"}
+var hallsToScrape [6]string = [6]string{
+	"Comstock Dining Hall",
+	"17th Ave. Dining Hall",
+	"Pioneer Dining Hall",
+	"Sanford Dining Hall",
+	"Middlebrook Dining Hall",
+	"Bailey Dining Hall",
+}
 
 const PAST_SCRAPE_DAYS int = 7
 const SCRAPE_PERIOD int = 14
@@ -22,12 +30,34 @@ const SLEEP_MAX_DIFF int = 10
 const TIME_DAY time.Duration = 24 * time.Hour
 
 // NON-EXPORTED FUNCTIONS
+func getLocations(siteId string) ([]docclient.Restaurant, error) {
+	foodBuildings, err := docclient.GetFoodBuildings(siteId)
+	if err != nil {
+		return nil, err
+	}
+
+	var locations []docclient.Restaurant
+	for _, building := range foodBuildings {
+		for _, location := range building.Locations {
+			for _, name := range hallsToScrape {
+				if location.Name == name {
+					locations = append(locations, location)
+				}
+			}
+		}
+	}
+
+	return locations, nil
+}
 
 // scrapeMenuToDatabase(conn (*pgx.Conn), locationId, periodName (strings), date (time.Time):
 // Takes a database connection, a dineoncampus location ID, a meal period name,
 // and a date. It removes all old menu data for the menu corresponding to these
 // parameters, and fills in new menu data if it exists.
 func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date time.Time) error {
+	// Predefining the nil error to ensure err exists
+	var err error
+
 	// Fetch the menu data for insertion into the DB
 	menu, err := docclient.GetMenuById(locationId, periodName, date)
 	if err != nil {
@@ -58,7 +88,9 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	}
 	// This can be safely done since transaction.Rollback returns an error
 	// once the transaction has been closed.
-	defer transaction.Rollback(context.Background())
+	defer func() {
+		err = transaction.Rollback(context.Background())
+	}()
 
 	_, err = transaction.Exec(
 		context.Background(),
@@ -95,7 +127,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	}
 
 	// If all goes well, we simply return no error.
-	return nil
+	return err
 }
 
 // EXPORTED FUNCTIONS FOR USE BY IMPORTING CODE
@@ -105,7 +137,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 // into the database.
 func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 	// Fetch all food locations at a given site
-	foodBuildings, err := docclient.GetFoodBuildings(siteId)
+	locations, err := getLocations(siteId)
 	if err != nil {
 		return err
 	}
@@ -130,23 +162,20 @@ func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
 		return err
 	}
 
-	for _, building := range foodBuildings {
-		for _, location := range building.Locations {
-			for _, periodName := range mealtimeIndexer {
-				for _, date := range dates {
-					err = scrapeMenuToDatabase(conn, location.Id, periodName, date)
-					if err != nil {
-						return err
-					}
-					// We sleep between SLEEP_MIN_SECS and
-					// SLEEP_MAX_DIFF + SLEEP_MIN_SECS seconds
-					// to prevent rate limiting or overloading
-					// our database when scraping.
-					time.Sleep(time.Duration(rand.Intn(SLEEP_MAX_DIFF)+SLEEP_MIN_SECS) * time.Second)
+	for _, location := range locations {
+		for _, periodName := range mealtimeIndexer {
+			for _, date := range dates {
+				err = scrapeMenuToDatabase(conn, location.Id, periodName, date)
+				if err != nil {
+					return err
 				}
+				// We sleep between SLEEP_MIN_SECS and
+				// SLEEP_MAX_DIFF + SLEEP_MIN_SECS seconds
+				// to prevent rate limiting or overloading
+				// our database when scraping.
+				time.Sleep(time.Duration(rand.Intn(SLEEP_MAX_DIFF)+SLEEP_MIN_SECS) * time.Second)
 			}
 		}
 	}
-
 	return nil
 }
