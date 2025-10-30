@@ -4,10 +4,23 @@ import type { FC, FormEvent } from "react";
 
 type Props = {
   setDiningHall: (diningHall: string) => void;
-  setDate: (date: string | undefined) => void;
+  setDate: (date: string) => void;
   setTime: (time: "breakfast" | "lunch" | "dinner" | "everyday") => void;
   handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
 };
+
+/**
+ * format date string for use as default state in calendar input type
+ * @returns YYYY-MM-DD string 
+ */
+export function getCurrentDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export const MealSearch: FC<Props> = ({
   setDiningHall,
@@ -68,10 +81,11 @@ export const MealSearch: FC<Props> = ({
             <input
               type="date"
               name="date"
+              value={getCurrentDate()}
               required
               onChange={(e) => {
                 const date = e.target.value;
-                setDate(date.length === 0 ? undefined : date);
+                setDate(date);
               }}
               className="w-full rounded-xl border border-white/30 bg-white/80 px-3 py-2 text-black focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
