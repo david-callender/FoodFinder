@@ -9,6 +9,10 @@ type Props = {
   handleSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
 };
 
+/**
+ * format date string for use as default state in calendar input type
+ * @returns YYYY-MM-DD string 
+ */
 export function getCurrentDate(): string {
   const today = new Date();
   const year = today.getFullYear();
