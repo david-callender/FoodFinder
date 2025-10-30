@@ -26,6 +26,7 @@ const UMN_SITE_ID = "61d7515eb63f1e0e970debbei"
 var errNoConnString = errors.New("notifier: DATABASE_URL is not set, we cannot connect to the database")
 var errNoEmail = errors.New("notifier: NOTIFIER_EMAIL is not set, we don't have an email address")
 var errNoPass = errors.New("notifier: NOTIFIER_PASSWORD is not set, we cannot authenticate with no password")
+var errTimeNotProvided = errors.New("notifier: Please provide a ISO YYYY-MM-DD date string as an argument")
 
 // Types
 type mealNotification struct {
@@ -41,22 +42,8 @@ type mealNotification struct {
 // and the date for which to send notifications from the commandline. Calls
 // the notifyUsers function with the extracted values.
 func main() {
-	connString := os.Getenv("DATABASE_URL")
-	if connString == "" {
-		log.Fatalln(errNoConnString)
-	}
+	err := runNotifier()
 
-	conn, err := pgx.Connect(context.Background(), connString)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	notifyTime, err := time.Parse("2006-01-02", os.Args[1])
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = notifyUsers(conn, notifyTime)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -129,24 +116,11 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 	date = date.Truncate(TIME_DAY)
 
 	dateFormatted := date.Format("2006-01-02")
-	usersToNotify, err := conn.Query(
-		context.Background(),
-		`SELECT user, meal, location, mealtime 
-			FROM "Preferences"
-			JOIN "DocCache" 
-			ON "Preferences.preference" = "DocCache.meal" 
-			WHERE day=$1
-			ORDER BY user;`,
-		dateFormatted,
-	)
-	if err != nil {
-		return err
-	}
 
 	var emailTable = make(map[int]string)
 	userEmails, err := conn.Query(
 		context.Background(),
-		`SELECT id, email FROM "Users" JOIN "Preferences" ON "Users.id" = "Preferences.user";`,
+		`SELECT id, email FROM "Users" JOIN "Preferences" ON "Users".id = "Preferences".user;`,
 	)
 	if err != nil {
 		return err
@@ -161,6 +135,21 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 		}
 		emailTable[userId] = email
 	}
+	userEmails.Close()
+
+	usersToNotify, err := conn.Query(
+		context.Background(),
+		`SELECT user, meal, location, mealtime 
+			FROM "Preferences"
+			JOIN "DocCache" 
+			ON "Preferences".preference = "DocCache".meal 
+			WHERE day=$1
+			ORDER BY user;`,
+		dateFormatted,
+	)
+	if err != nil {
+		return err
+	}
 
 	var notificationTable = make(map[int][]mealNotification)
 	for usersToNotify.Next() {
@@ -172,6 +161,7 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 		}
 		notificationTable[notif.user] = append(notificationTable[notif.user], notif)
 	}
+	usersToNotify.Close()
 
 	messages, err := generateMessages(notificationTable, emailTable)
 	if err != nil {
@@ -183,6 +173,39 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 	}
 
 	return nil
+}
+
+func runNotifier() error {
+	// Pre-set the nil error for the deferred conn.Close
+	var err error
+
+	connString := os.Getenv("DATABASE_URL")
+	if connString == "" {
+		return errNoConnString
+	}
+
+	conn, err := pgx.Connect(context.Background(), connString)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = conn.Close(context.Background())
+	}()
+
+	if len(os.Args) == 1 {
+		return errTimeNotProvided
+	}
+	notifyTime, err := time.Parse("2006-01-02", os.Args[1])
+	if err != nil {
+		return err
+	}
+
+	err = notifyUsers(conn, notifyTime)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // sendMessages(messages): takes a slice of references to mail.Msg emails, obtains
@@ -197,19 +220,20 @@ func sendMessages(messages []*mail.Msg) error {
 	if notifierPassword == "" {
 		return errNoPass
 	}
-	mailer, err := mail.NewClient(
-		EMAIL_HOST,
-		mail.WithUsername(notifierEmail),
-		mail.WithPassword(notifierPassword),
-		mail.WithSMTPAuth(mail.SMTPAuthPlain),
-	)
-	if err != nil {
-		return err
-	}
-
-	if err = mailer.DialAndSend(messages...); err != nil {
-		return err
-	}
+	//	mailer, err := mail.NewClient(
+	//		EMAIL_HOST,
+	//		mail.WithUsername(notifierEmail),
+	//		mail.WithPassword(notifierPassword),
+	//		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+	//	)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	if err = mailer.DialAndSend(messages...); err != nil {
+	//		return err
+	//	}
+	fmt.Println(notifierEmail, notifierPassword, messages)
 
 	return nil
 }
