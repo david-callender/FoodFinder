@@ -220,20 +220,19 @@ func sendMessages(messages []*mail.Msg) error {
 	if notifierPassword == "" {
 		return errNoPass
 	}
-	//	mailer, err := mail.NewClient(
-	//		EMAIL_HOST,
-	//		mail.WithUsername(notifierEmail),
-	//		mail.WithPassword(notifierPassword),
-	//		mail.WithSMTPAuth(mail.SMTPAuthPlain),
-	//	)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	if err = mailer.DialAndSend(messages...); err != nil {
-	//		return err
-	//	}
-	fmt.Println(notifierEmail, notifierPassword, messages)
+	mailer, err := mail.NewClient(
+		EMAIL_HOST,
+		mail.WithUsername(notifierEmail),
+		mail.WithPassword(notifierPassword),
+		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+	)
+	if err != nil {
+		return err
+	}
+
+	if err = mailer.DialAndSend(messages...); err != nil {
+		return err
+	}
 
 	return nil
 }
