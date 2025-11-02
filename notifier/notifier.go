@@ -38,9 +38,7 @@ type mealNotification struct {
 
 // Functions
 
-// The main function. Reads the database connection string from the environment,
-// and the date for which to send notifications from the commandline. Calls
-// the notifyUsers function with the extracted values.
+// The main function. Runs runNotifier() and catches any errors it produces.
 func main() {
 	err := runNotifier()
 
@@ -175,6 +173,10 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 	return nil
 }
 
+// runNotifier(): Reads the database connection URL from the environment,
+// and acquires a connection. It also reads the date from the commandline. It
+// will then call notifyUsers with the acquired values. Catches and returns any
+// errors raised along the way.
 func runNotifier() error {
 	// Pre-set the nil error for the deferred conn.Close
 	var err error
