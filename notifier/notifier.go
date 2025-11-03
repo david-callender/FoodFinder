@@ -118,7 +118,10 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 	var emailTable = make(map[int]string)
 	userEmails, err := conn.Query(
 		context.Background(),
-		`SELECT id, email FROM "Users" JOIN "Preferences" ON "Users".id = "Preferences".user;`,
+		`SELECT id, email
+			FROM "Users"
+			JOIN "Preferences"
+			ON "Users".id = "Preferences".user;`,
 	)
 	if err != nil {
 		return err
