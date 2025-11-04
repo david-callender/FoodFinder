@@ -12,10 +12,15 @@ const SCHEMA = z.object({
 
 export type LoginData = z.output<typeof SCHEMA>;
 
+type SuccessResponse = { ok: true; data: LoginData };
+type ErrorResponse = { ok: false; error: string };
+
+type Response = SuccessResponse | ErrorResponse;
+
 export const login = async (
   email: string,
   password: string
-): Promise<LoginData> => {
+): Promise<Response> => {
   // Purpose : Login into/check credentials of a user
   // Args:
   // email : string - users email
@@ -33,9 +38,7 @@ export const login = async (
 
   const json = (await response.json()) as unknown;
 
-  if (response.ok) {
-    return await SCHEMA.parseAsync(json);
-  } else {
-    throw new Error("Call to /login failed: " + JSON.stringify(json));
-  }
+  return response.ok
+    ? { ok: true, data: await SCHEMA.parseAsync(json) }
+    : { ok: false, error: "call to /getMenu failed: " + JSON.stringify(json) };
 };

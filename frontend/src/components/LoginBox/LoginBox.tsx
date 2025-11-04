@@ -16,6 +16,8 @@ export const LoginBox: FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [error, setError] = useState<string>("");
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
@@ -27,13 +29,18 @@ export const LoginBox: FC = () => {
     // update this to a redirect (?) for registration
     // if login fails
 
-    // request to login endpoint
-    // refresh_token cookie is set here
     const response = await login(email, password);
+    if (response.ok) {
+      // request to login endpoint
+      // refresh_token cookie is set here
 
-    localStorage.setItem("access_token", response.accessToken);
-    // redirect
-    router.push("/");
+      localStorage.setItem("access_token", response.data.accessToken);
+      // redirect
+      router.push("/");
+    } else {
+      // TODO : make login box have some reactivity!
+      setError(response.error);
+    }
   }
 
   // final login box component
@@ -62,6 +69,7 @@ export const LoginBox: FC = () => {
           className="m-3 w-60 place-self-center rounded-lg bg-gray-800 p-2"
           required
         />
+        <p className="place-self-center text-xs">{error}</p>
         <button className="mx-auto rounded-xl bg-red-900 px-4 py-2 font-semibold shadow transition hover:cursor-pointer hover:bg-red-700">
           Login
         </button>

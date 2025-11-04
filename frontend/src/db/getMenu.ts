@@ -12,6 +12,11 @@ const SCHEMA = z.array(
 
 type MenuData = z.output<typeof SCHEMA>;
 
+type SuccessResponse = { ok: true; data: MenuData };
+type ErrorResponse = { ok: false; error: string };
+
+type Response = SuccessResponse | ErrorResponse;
+
 export type MenuItem = MenuData[number];
 
 // Purpose : retrieving data for meals given a set of parameters
@@ -25,7 +30,7 @@ export const getMenu = async (
   day: string,
   mealtime: "breakfast" | "lunch" | "dinner" | "everyday",
   diningHall: string
-): Promise<MenuData> => {
+): Promise<Response> => {
   const searchParams = new URLSearchParams({
     day,
     mealtime,
@@ -37,9 +42,7 @@ export const getMenu = async (
   );
   const json = (await response.json()) as unknown;
 
-  if (response.ok) {
-    return await SCHEMA.parseAsync(json);
-  } else {
-    throw new Error("Call to /getMenu failed :" + JSON.stringify(json));
-  }
+  return response.ok
+    ? { ok: true, data: await SCHEMA.parseAsync(json) }
+    : { ok: false, error: "call to /getMenu failed: " + JSON.stringify(json) };
 };

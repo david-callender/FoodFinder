@@ -54,6 +54,8 @@ export const SignUpBox: FC = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
+  const [error, setError] = useState<string>("");
+
   function changePhoneNumber(e: ChangeEvent<HTMLInputElement>): void {
     // Purpose : controlling state for phone number field in form
     // Args:
@@ -92,10 +94,13 @@ export const SignUpBox: FC = () => {
 
     //  TODO [backend] : Handling a "user exists" error from backend (or if they already have cookies)
     // TODO [misc.] : Handle User phone numbers without a US country code
-
-    // setting access token
-    localStorage.setItem("access_token", response.accessToken);
-    router.push("/");
+    if (response.ok) {
+      // setting access token
+      localStorage.setItem("access_token", response.data.accessToken);
+      router.push("/");
+    } else {
+      setError(response.error);
+    }
   }
 
   return (
@@ -134,6 +139,7 @@ export const SignUpBox: FC = () => {
           placeholder="XXX-XXX-XXXX"
           required
         />
+        <p className="place-self-center text-xs">{error}</p>
         <button className="mx-auto rounded-xl bg-red-900 px-4 py-2 font-semibold shadow transition hover:cursor-pointer hover:bg-red-700">
           Sign Up
         </button>

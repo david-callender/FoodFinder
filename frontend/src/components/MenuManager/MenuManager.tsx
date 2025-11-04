@@ -11,6 +11,7 @@ import type { MenuItem } from "@/db/getMenu";
 import type { FC, FormEvent } from "react";
 
 export const MenuManager: FC = () => {
+  // TODO : pass this into MENU for showing errors
   const [error, setError] = useState<string>("");
   // state for menu items
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -32,8 +33,13 @@ export const MenuManager: FC = () => {
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     // Description : handling submit of search query
     e.preventDefault();
+    const menuData = await getMenu(date, time, diningHall);
 
-    setMenuItems(await getMenu(date, time, diningHall));
+    if (menuData.ok) {
+      setMenuItems(menuData.data);
+    } else {
+      setError(menuData.error);
+    }
   }
 
   return (

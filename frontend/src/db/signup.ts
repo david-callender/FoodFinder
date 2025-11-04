@@ -9,11 +9,16 @@ const SCHEMA = z.object({
 
 type SignupData = z.output<typeof SCHEMA>;
 
+type SuccessResponse = { ok: true; data: SignupData };
+type ErrorResponse = { ok: false; error: string };
+
+type Response = SuccessResponse | ErrorResponse;
+
 export const signup = async (
   email: string,
   password: string,
   displayName: string
-): Promise<SignupData> => {
+): Promise<Response> => {
   // Purpose : Creating new user credentials given fields email, password
   // Args:
   // email : string - user's email
@@ -33,9 +38,7 @@ export const signup = async (
 
   const json = (await response.json()) as unknown;
 
-  if (response.ok) {
-    return await SCHEMA.parseAsync(json);
-  } else {
-    throw new Error("Call to /signup failed: " + JSON.stringify(json));
-  }
+  return response.ok
+    ? { ok: true, data: await SCHEMA.parseAsync(json) }
+    : { ok: false, error: "Call to /signup failed: " + JSON.stringify(json) };
 };
