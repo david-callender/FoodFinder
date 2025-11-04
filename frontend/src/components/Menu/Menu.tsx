@@ -42,27 +42,27 @@ export const Menu: FC<Props> = ({ items: items_in }) => {
   };
 
   return preferred.length === 0 && notPreferred.length === 0 ? (
-    <>
-      <div className="grid justify-center">No Data</div>
-    </>
+    <></>
   ) : (
     <>
-      <div className="grid justify-center">
-        <div className="min-h-10 rounded-xl border border-white">
-          {/* To understand what is happening here, I would highly recommend reading this:
-            https://stackoverflow.com/questions/76958201/how-to-pass-props-to-child-component-in-next-js-13
-            essentially passing state function down two child components so that it can be used by LikeButton */}
-          <MealList
-            items={preferred}
-            handlePreferenceChange={handlePreferenceChange}
-          />
-        </div>
+      <div className="rounded-3xl bg-white/10 p-12">
+        <div className="grid justify-center">
+          <div className="min-h-10 rounded-xl border border-white">
+            {/* To understand what is happening here, I would highly recommend reading this:
+              https://stackoverflow.com/questions/76958201/how-to-pass-props-to-child-component-in-next-js-13
+              essentially passing state function down two child components so that it can be used by LikeButton */}
+            <MealList
+              items={preferred}
+              handlePreferenceChange={handlePreferenceChange}
+            />
+          </div>
 
-        <div className="min-h-10 rounded-xl border border-white">
-          <MealList
-            items={notPreferred}
-            handlePreferenceChange={handlePreferenceChange}
-          />
+          <div className="min-h-10 rounded-xl border border-white">
+            <MealList
+              items={notPreferred}
+              handlePreferenceChange={handlePreferenceChange}
+            />
+          </div>
         </div>
       </div>
     </>

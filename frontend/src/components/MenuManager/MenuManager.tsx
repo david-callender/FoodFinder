@@ -32,7 +32,6 @@ export const MenuManager: FC = () => {
   async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     // Description : handling submit of search query
     e.preventDefault();
-  
 
     setMenuItems(await getMenu(date, time, diningHall));
   }
@@ -48,9 +47,7 @@ export const MenuManager: FC = () => {
             handleSubmit={handleSubmit}
           />
           <p>{error}</p>
-          <div className="rounded-3xl bg-white/10 p-12">
-            <Menu items={menuItems} />
-          </div>
+          <Menu items={menuItems} />
         </div>
       </div>
     </>
