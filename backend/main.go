@@ -188,35 +188,34 @@ func verifyToken(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 	return nil, fmt.Errorf("invalid token")
 }
 
-func (s *Server) protectRoute(accessToken string) error {
+func (s *Server) protectRoute(accessToken string) (int, error) {
 	accessKey := os.Getenv("access_key")
 
 	token, err := verifyToken(accessToken, []byte(accessKey))
 
 	if err != nil {
-		return fmt.Errorf("failed to verify token: %w", err)
+		return 0, fmt.Errorf("failed to verify token: %w", err)
 	}
-
 
 	subjectStr, ok := token["sub"]
 
 	if !ok {
-		return fmt.Errorf("no subject in token: %w", err)
+		return 0, fmt.Errorf("no subject in token: %w", err)
 	}
 
 	subject, err := strconv.Atoi(subjectStr.(string))
 
 	if err != nil {
-		return fmt.Errorf("invalid subject: %w", err)
+		return 0, fmt.Errorf("invalid subject: %w", err)
 	}
 
 	loggedIn, ok := s.LoggedIn[subject]
 
 	if !(ok && loggedIn) {
-		return fmt.Errorf("not logged in")
+		return 0, fmt.Errorf("not logged in")
 	}
 
-	return nil
+	return subject, nil
 }
 
 // adds the refresh token to the http cookies and returns the access token
@@ -252,7 +251,7 @@ func (s *Server) GetMenu(c *gin.Context) {
 	dining_hall := c.Query("diningHall")
 	mealtime := c.Query("mealtime")
 
-	err := s.protectRoute(accessToken)
+	_, err := s.protectRoute(accessToken)
 
 	if err != nil {
 		fmt.Println("/getMenu: not authenticated: ", err)
@@ -304,7 +303,7 @@ func (s *Server) addFoodPreference(c *gin.Context) {
 		return
 	}
 
-	err = s.protectRoute(foodPreference.AccessToken)
+	id, err := s.protectRoute(foodPreference.AccessToken)
 
 	if err != nil {
 		fmt.Println("/addFoodPreference: not authenticated: ", err)
@@ -312,7 +311,13 @@ func (s *Server) addFoodPreference(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("adding preference: ", foodPreference.Meal)
+	_, err = s.DB.Query(context.Background(), `INSERT INTO "Preferences" ("user", "preference") VALUES ($1, $2)`, id, foodPreference.Meal)
+
+	if err != nil {
+		fmt.Println("/addFoodPreference: failed in insert: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
+	}
+
 	c.Status(http.StatusOK)
 }
 
@@ -330,12 +335,19 @@ func (s *Server) removeFoodPreference(c *gin.Context) {
 		return
 	}
 
-	err = s.protectRoute(foodPreference.AccessToken)
+	id, err := s.protectRoute(foodPreference.AccessToken)
 
 	if err != nil {
 		fmt.Println("/addFoodPreference: not authenticated: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
 		return
+	}
+
+	_, err = s.DB.Query(context.Background(), `DELETE FROM "Preferences" WHERE "user" = $1 AND "preference" = $2`, id, foodPreference.Meal)
+
+	if err != nil {
+		fmt.Println("/addFoodPreference: failed in insert: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
 	}
 
 	fmt.Println("removing preference: ", foodPreference.Meal)
@@ -544,6 +556,8 @@ func (s *Server) Signup(c *gin.Context) {
 //----------------------------------------------------
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
 	env_err := godotenv.Load()
 	if env_err != nil {
 		log.Fatalln("Error loading .env file")
