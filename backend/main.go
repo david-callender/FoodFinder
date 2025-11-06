@@ -43,7 +43,8 @@ type MealWithPreference struct {
 
 // GLOBAL VAR STORAGE
 type Server struct {
-	DB *pgxpool.Pool
+	DB       *pgxpool.Pool
+	LoggedIn map[int]bool
 }
 
 var ErrEmailInUse = errors.New("email already in use")
@@ -187,6 +188,36 @@ func verifyToken(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 	return nil, fmt.Errorf("invalid token")
 }
 
+func (s *Server) protectRoute(accessToken string) error {
+	accessKey := os.Getenv("access_key")
+
+	token, err := verifyToken(accessToken, []byte(accessKey))
+
+	if err != nil {
+		return fmt.Errorf("failed to verify token: %w", err)
+	}
+
+	subjectStr, err := token.GetSubject()
+
+	if err != nil {
+		return fmt.Errorf("no subject in token: %w", err)
+	}
+
+	subject, err := strconv.Atoi(subjectStr)
+
+	if err != nil {
+		return fmt.Errorf("invalid subject: %w", err)
+	}
+
+	loggedIn, ok := s.LoggedIn[subject]
+
+	if !(ok && loggedIn) {
+		return fmt.Errorf("not logged in")
+	}
+
+	return nil
+}
+
 // adds the refresh token to the http cookies and returns the access token
 func RefreshCookieTemplate(c *gin.Context, uid int) (string, error) {
 	access, refresh, err := generateToken(uid)
@@ -215,9 +246,18 @@ func RefreshCookieTemplate(c *gin.Context, uid int) (string, error) {
 func (s *Server) GetMenu(c *gin.Context) {
 	//Method: GET
 
+	accessToken := c.Query("accessToken")
 	day := c.Query("day")
 	dining_hall := c.Query("diningHall")
 	mealtime := c.Query("mealtime")
+
+	err := s.protectRoute(accessToken)
+
+	if err != nil {
+		fmt.Println("/getMenu: not authenticated: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
+		return
+	}
 
 	// GetMenuById requires a time.Time so we have to parse the day
 	day_as_time, err := time.Parse(time.DateOnly, day)
@@ -251,14 +291,23 @@ func (s *Server) GetMenu(c *gin.Context) {
 
 func (s *Server) addFoodPreference(c *gin.Context) {
 	var foodPreference struct {
-		Meal string `json:"meal" binding:"required"`
+		AccessToken string `json:"accessToken" binding:"required"`
+		Meal        string `json:"meal" binding:"required"`
 	}
 
 	err := c.ShouldBindJSON(&foodPreference)
 
 	if err != nil {
-		fmt.Println("/addFoodPreference: meal required: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "meal required"})
+		fmt.Println("/addFoodPreference: accessToken and meal required: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "accessToken and meal required"})
+		return
+	}
+
+	err = s.protectRoute(foodPreference.AccessToken)
+
+	if err != nil {
+		fmt.Println("/addFoodPreference: not authenticated: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
 		return
 	}
 
@@ -268,14 +317,23 @@ func (s *Server) addFoodPreference(c *gin.Context) {
 
 func (s *Server) removeFoodPreference(c *gin.Context) {
 	var foodPreference struct {
-		Meal string `json:"meal" binding:"required"`
+		AccessToken string `json:"accessToken" binding:"required"`
+		Meal        string `json:"meal" binding:"required"`
 	}
 
 	err := c.ShouldBindJSON(&foodPreference)
 
 	if err != nil {
-		fmt.Println("/removeFoodPreference: meal required: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "meal required"})
+		fmt.Println("/removeFoodPreference: accessToken and meal required: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "accessToken and meal required"})
+		return
+	}
+
+	err = s.protectRoute(foodPreference.AccessToken)
+
+	if err != nil {
+		fmt.Println("/addFoodPreference: not authenticated: ", err)
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
 		return
 	}
 
@@ -330,7 +388,7 @@ func (s *Server) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"access_token": access})
+	c.JSON(http.StatusOK, gin.H{"accessToken": access})
 }
 
 // Method: POST
@@ -366,7 +424,7 @@ func (s *Server) Login(c *gin.Context) {
 
 	}
 
-	access, err := RefreshCookieTemplate(c, user_result.ID)
+	_, err = RefreshCookieTemplate(c, user_result.ID)
 
 	if err != nil {
 		fmt.Println("/login: token generation failed: ", err)
@@ -374,15 +432,51 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	s.LoggedIn[user_result.ID] = true
+
 	c.JSON(http.StatusOK, gin.H{
-		"accessToken": access,
 		"displayName": user_result.DisplayName,
 	})
 }
 
 // Method: POST
 func (s *Server) Logout(c *gin.Context) {
-	cookie := &http.Cookie{
+	jwt_refresh_key := []byte(os.Getenv("refresh_key"))
+	refresh_cookie, err := c.Cookie("refresh_token")
+
+	if err != nil {
+		fmt.Println("/logout: no refresh token: ", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid jwt"})
+		return
+	}
+
+	token_data, err := verifyToken(refresh_cookie, jwt_refresh_key)
+
+	if err != nil {
+		fmt.Println("/logout: invalid refresh token: ", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid jwt"})
+		return
+	}
+
+	subjectStr, err := token_data.GetSubject()
+
+	if err != nil {
+		fmt.Println("/logout: no subject in refresh token: ", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid jwt"})
+		return
+	}
+
+	subject, err := strconv.Atoi(subjectStr)
+
+	if err != nil {
+		fmt.Println("/logout: invalid subject: ", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid jwt"})
+		return
+	}
+
+	s.LoggedIn[subject] = false
+
+	newCookie := &http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",
 		Path:     "/",
@@ -392,7 +486,7 @@ func (s *Server) Logout(c *gin.Context) {
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	http.SetCookie(c.Writer, cookie)
+	http.SetCookie(c.Writer, newCookie)
 
 	c.Status(http.StatusOK)
 }
@@ -430,7 +524,7 @@ func (s *Server) Signup(c *gin.Context) {
 		return
 	}
 
-	access, err := RefreshCookieTemplate(c, uid)
+	_, err = RefreshCookieTemplate(c, uid)
 
 	if err != nil {
 		fmt.Println("/signup: token generation failed: ", err)
@@ -438,9 +532,9 @@ func (s *Server) Signup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"accessToken": access,
-	})
+	s.LoggedIn[uid] = true
+
+	c.Status(http.StatusCreated)
 }
 
 //---------------END-OF-API-ENDPOINTS-----------------
@@ -465,7 +559,7 @@ func main() {
 	}
 	defer db.Close()
 
-	s := &Server{DB: db}
+	s := &Server{DB: db, LoggedIn: map[int]bool{}}
 
 	router := gin.Default()
 
