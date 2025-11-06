@@ -111,7 +111,7 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 
 	_, err = transaction.Exec(
 		context.Background(),
-		`DELETE FROM "DocCache" WHERE day=$1 AND location=$2 AND mealtime=$3;`,
+		`DELETE FROM "DocCache" WHERE day=$1 AND location=$2 AND mealtime=$3`,
 		dateFormatted, locationId, mealtimeNum,
 	)
 	if err != nil {
