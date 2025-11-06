@@ -1,6 +1,6 @@
-import { LinkBar } from "@/components/LinkBar/LinkBar";
-import { MainBackground } from "@/components/MainBackground/MainBackground";
-import { MenuManager } from "@/components/MenuManager/MenuManager";
+import { LinkBar } from "@/components/LinkBar";
+import { MainBackground } from "@/components/MainBackground";
+import { MenuManager } from "@/components/MenuManager";
 
 import type { FC, FormEvent } from "react";
 

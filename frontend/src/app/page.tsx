@@ -1,7 +1,7 @@
 "use client";
 
-import { LinkBar } from "@/components/LinkBar/LinkBar";
-import { MainBackground } from "@/components/MainBackground/MainBackground";
+import { LinkBar } from "@/components/LinkBar";
+import { MainBackground } from "@/components/MainBackground";
 
 import type { FC } from "react";
 

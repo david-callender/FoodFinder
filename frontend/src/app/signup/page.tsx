@@ -1,4 +1,4 @@
-import { LinkBar } from "@/components/LinkBar/LinkBar";
+import { LinkBar } from "@/components/LinkBar";
 
 import { SignUpBox } from "../../components/SignUpBox/SignUpBox";
 
