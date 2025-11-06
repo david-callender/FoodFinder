@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"errors"
-	docclient "github.com/david-callender/FoodFinder/scraper/dineocclient"
-	"github.com/jackc/pgx/v5"
+	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
+
+	docclient "github.com/david-callender/FoodFinder/scraper/dineocclient"
+	"github.com/jackc/pgx/v5"
 )
 
 // Global variables
@@ -23,11 +26,25 @@ var hallsToScrape [6]string = [6]string{
 	"Bailey Dining Hall",
 }
 
+var errNoConnString error = errors.New("DATABASE_URL is not set, cannot connect to database")
+
 const PAST_SCRAPE_DAYS int = 7
 const SCRAPE_PERIOD int = 14
 const SLEEP_MIN_SECS int = 5
 const SLEEP_MAX_DIFF int = 10
 const TIME_DAY time.Duration = 24 * time.Hour
+const UMN_SITE_ID string = "61d7515eb63f1e0e970debbe"
+
+// main()
+func main() {
+	err := runScraper()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err == nil {
+		log.Println("Successfully scraped menus to database")
+	}
+}
 
 // NON-EXPORTED FUNCTIONS
 func getLocations(siteId string) ([]docclient.Restaurant, error) {
@@ -127,6 +144,26 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	}
 
 	// If all goes well, we simply return no error.
+	return err
+}
+
+// runScraper():
+func runScraper() error {
+	var err error
+	connString := os.Getenv("DATABASE_URL")
+	if connString == "" {
+		return errNoConnString
+	}
+
+	conn, err := pgx.Connect(context.Background(), connString)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = conn.Close(context.Background())
+	}()
+
+	err = ScrapeMenusToDatabase(conn, UMN_SITE_ID)
 	return err
 }
 
