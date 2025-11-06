@@ -35,7 +35,7 @@ const SLEEP_MAX_DIFF int = 10
 const TIME_DAY time.Duration = 24 * time.Hour
 const UMN_SITE_ID string = "61d7515eb63f1e0e970debbe"
 
-// main()
+// main(): calls runScraper() and logs any errors received, logging success otherwise.
 func main() {
 	err := runScraper()
 	if err != nil {
@@ -147,7 +147,9 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	return err
 }
 
-// runScraper():
+// runScraper(): Reads DATABASE_URL from the environment and acquires a database
+// connection. It then runs ScrapeMenusToDatabase(). It returns any errors
+// received.
 func runScraper() error {
 	var err error
 	connString := os.Getenv("DATABASE_URL")
