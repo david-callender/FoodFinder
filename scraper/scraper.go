@@ -1,9 +1,9 @@
-package scraper
+package main
 
 import (
 	"context"
 	"errors"
-	docclient "github.com/david-callender/FoodFinder/dineocclient"
+	docclient "github.com/david-callender/FoodFinder/scraper/dineocclient"
 	"github.com/jackc/pgx/v5"
 	"math/rand"
 	"strings"
