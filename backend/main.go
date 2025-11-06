@@ -146,12 +146,12 @@ func generateToken(userid int) (string, string, error) {
 	creation_time := time.Now()
 
 	access_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": userid,
+		"sub": strconv.Itoa(userid),
 		"iat": creation_time.Unix(),
 		"exp": creation_time.Add(ACCESS_TOKEN_KEEPALIVE).Unix(),
 	})
 	refresh_token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": userid,
+		"sub": strconv.Itoa(userid),
 		"iat": creation_time.Unix(),
 		"exp": creation_time.Add(REFRESH_TOKEN_KEEPALIVE).Unix(),
 	})
@@ -197,13 +197,14 @@ func (s *Server) protectRoute(accessToken string) error {
 		return fmt.Errorf("failed to verify token: %w", err)
 	}
 
-	subjectStr, err := token.GetSubject()
 
-	if err != nil {
+	subjectStr, ok := token["sub"]
+
+	if !ok {
 		return fmt.Errorf("no subject in token: %w", err)
 	}
 
-	subject, err := strconv.Atoi(subjectStr)
+	subject, err := strconv.Atoi(subjectStr.(string))
 
 	if err != nil {
 		return fmt.Errorf("invalid subject: %w", err)
@@ -367,6 +368,7 @@ func (s *Server) Refresh(c *gin.Context) {
 	uid_str, err := token_data.GetSubject()
 
 	if err != nil {
+		fmt.Println(token_data)
 		fmt.Println("/refresh: no token subject: ", err)
 		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload"})
 		return

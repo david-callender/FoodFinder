@@ -81,7 +81,6 @@ export const MealSearch: FC<Props> = ({
             <input
               type="date"
               name="date"
-              value={getCurrentDate()}
               required
               onChange={(e) => {
                 const date = e.target.value;

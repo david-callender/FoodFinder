@@ -33,7 +33,12 @@ export const MenuManager: FC = () => {
     // Description : handling submit of search query
     e.preventDefault();
 
-    setMenuItems(await getMenu(date, time, diningHall));
+    const menu = await getMenu(date, time, diningHall);
+    if (menu.ok) {
+      setMenuItems(menu.data);
+    } else {
+      setError(menu.err);
+    }
   }
 
   return (
