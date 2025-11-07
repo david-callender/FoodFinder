@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/gin-contrib/cors" // cors handling later
+	"github.com/gin-contrib/cors"
 
 	docclient "github.com/david-callender/FoodFinder/dineocclient"
 
@@ -41,7 +41,6 @@ type MealWithPreference struct {
 	Id          string `json:"id"`
 }
 
-// GLOBAL VAR STORAGE
 type Server struct {
 	DB       *pgxpool.Pool
 	LoggedIn map[int]bool
@@ -69,20 +68,22 @@ func connectDB() (*pgxpool.Pool, error) {
 	return db, nil
 }
 
-// Checks if a user exists in the database by an email
+// Checks if a user exists in the database by an email.
 func EmailExists(db *pgxpool.Pool, email string) (bool, error) {
 	var exists bool
 	err := db.QueryRow(context.Background(),
 		`SELECT EXISTS (SELECT 1 FROM "Users" WHERE "email"=$1)`,
 		email,
 	).Scan(&exists)
+
 	if err != nil {
 		return false, err
 	}
+
 	return exists, nil
 }
 
-// Adds a new user to the users table
+// Adds a new user to the users table.
 func AddNewUser(db *pgxpool.Pool, email string, password []byte, displayName string) (int, error) {
 	exists, err := EmailExists(db, email)
 	if err != nil {
@@ -94,10 +95,9 @@ func AddNewUser(db *pgxpool.Pool, email string, password []byte, displayName str
 
 	var id int
 	err = db.QueryRow(context.Background(), `
-        INSERT INTO "Users" ("email", "password", "displayName")
-        VALUES ($1, $2, $3)
-        RETURNING "id";
-    `, email, password, displayName).Scan(&id)
+		INSERT INTO "Users" ("email", "password", "displayName")
+		VALUES ($1, $2, $3)
+		RETURNING "id"`, email, password, displayName).Scan(&id)
 
 	if err != nil {
 		return -1, fmt.Errorf("failed to insert new user: %w", err)
@@ -105,7 +105,7 @@ func AddNewUser(db *pgxpool.Pool, email string, password []byte, displayName str
 	return id, nil
 }
 
-// Finds a user by an email
+// Finds a user by an email.
 func GetByEmail(db *pgxpool.Pool, email string) (*User, error) {
 	var user User
 
@@ -126,7 +126,7 @@ func GetByEmail(db *pgxpool.Pool, email string) (*User, error) {
 	return &user, nil
 }
 
-// Hashes a password using bcrypt
+// Hashes a password using bcrypt.
 func HashPassword(password string) ([]byte, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -135,13 +135,14 @@ func HashPassword(password string) ([]byte, error) {
 	return hashed, nil
 }
 
-// Compares users hash in db to typed password
-// Returns nil on success, err on fail
+// Compares users hash in db to typed password. Returns nil on success, or an
+// error on fail.
 func CheckPasswordHash(hashedPassword []byte, password string) error {
 	return bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 }
 
-// Generates a new pair of access and refresh tokens. Returns (access_token, refresh_token, error)
+// Generates a new pair of access and refresh tokens. Returns (access_token,
+// refresh_token).
 func generateToken(userid int) (string, string, error) {
 	creation_time := time.Now()
 
@@ -255,7 +256,7 @@ func (s *Server) GetMenu(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println("/getMenu: not authenticated: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "unauthenticated"})
 		return
 	}
 
@@ -268,11 +269,11 @@ func (s *Server) GetMenu(c *gin.Context) {
 	}
 
 	// TODO: fetch via SQL query from our database instead of directly using dineocclient
-	// TODO: this is technically an API call that requires authentication. Implement this.
 	menu, err := docclient.GetMenuById(dining_hall, mealtime, day_as_time)
 	if err != nil {
 		fmt.Println("/getMenu: failed getting menu data: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "failed getting menu data"})
+		return
 	}
 
 	// This has to be done because the Meal struct doesn't have preferences and has
@@ -307,7 +308,7 @@ func (s *Server) addFoodPreference(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println("/addFoodPreference: not authenticated: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "unauthenticated"})
 		return
 	}
 
@@ -316,6 +317,7 @@ func (s *Server) addFoodPreference(c *gin.Context) {
 	if err != nil {
 		fmt.Println("/addFoodPreference: failed in insert: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
+		return
 	}
 
 	c.Status(http.StatusOK)
@@ -339,7 +341,7 @@ func (s *Server) removeFoodPreference(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println("/addFoodPreference: not authenticated: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"detail": "unauthenticated"})
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "unauthenticated"})
 		return
 	}
 
@@ -348,6 +350,7 @@ func (s *Server) removeFoodPreference(c *gin.Context) {
 	if err != nil {
 		fmt.Println("/addFoodPreference: failed in insert: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "database error"})
+		return
 	}
 
 	fmt.Println("removing preference: ", foodPreference.Meal)
@@ -366,14 +369,14 @@ func (s *Server) Refresh(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println("/refresh: no refresh token: ", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "no refresh token"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "no refresh token"})
 		return
 	}
 
 	token_data, err := verifyToken(refresh_cookie, jwt_refresh_key)
 	if err != nil {
 		fmt.Println("/refresh: token verification failed: ", err)
-		c.JSON(http.StatusForbidden, gin.H{"detail": "token verification failed"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "token verification failed"})
 		return
 	}
 
@@ -382,7 +385,7 @@ func (s *Server) Refresh(c *gin.Context) {
 	if err != nil {
 		fmt.Println(token_data)
 		fmt.Println("/refresh: no token subject: ", err)
-		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "invalid token payload"})
 		return
 	}
 
@@ -390,7 +393,7 @@ func (s *Server) Refresh(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println("/refresh: invalid token subject: ", err)
-		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid token payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "invalid token payload"})
 		return
 	}
 
@@ -435,7 +438,6 @@ func (s *Server) Login(c *gin.Context) {
 		fmt.Println("/login: invalid password: ", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"detail": "invalid credentials"})
 		return
-
 	}
 
 	_, err = RefreshCookieTemplate(c, user_result.ID)
@@ -523,7 +525,7 @@ func (s *Server) Signup(c *gin.Context) {
 	password, err := HashPassword(register_account.Password)
 	if err != nil {
 		fmt.Println("/signup: failed to hash password: ", err)
-		c.JSON(http.StatusForbidden, gin.H{"detail": "invalid password"})
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "invalid password"})
 		return
 	}
 
