@@ -107,6 +107,9 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	// once the transaction has been closed.
 	defer func() {
 		err = transaction.Rollback(context.Background())
+		if err == pgx.ErrTxClosed {
+			err = nil
+		}
 	}()
 
 	_, err = transaction.Exec(

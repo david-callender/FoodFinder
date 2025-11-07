@@ -86,6 +86,11 @@ it or else you will get an error.
 
 Make sure run `go get .` in the `notifier` directory as well.
 
+### Scraper
+The module `scraper` located at `/scraper` from the root of the project also
+reads the database connections tring as `DATABASE_URL`. It takes no arguments
+one built and blocks until it has finished scraping or encounters an error.
+
 ### Getting started
 
 -   Install Go.
