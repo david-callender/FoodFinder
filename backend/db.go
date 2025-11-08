@@ -110,6 +110,34 @@ func GetByEmail(db *pgxpool.Pool, email string) (*User, error) {
 	return &user, nil
 }
 
+// Produces a map of preferences to true for a given user.
+func GetUserPrefs(db *pgxpool.Pool, uid int) (map[string]bool, error) {
+	prefs := make(map[string]bool)
+
+	prefRows, err := db.Query(
+		context.Background(),
+		`SELECT "preference" FROM "Preferences" WHERE "user"=$1`,
+		uid,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return prefs, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("GetUserPrefs: failed database query: %v", err)
+	}
+
+	for prefRows.Next() {
+		var pref string
+		err = prefRows.Scan(&pref)
+		if err != nil {
+			return nil, fmt.Errorf("GetUserPrefs: failed reading row: %v", err)
+		}
+
+		prefs[pref] = true
+	}
+
+	return prefs, err
+}
+
 // Hashes a password using bcrypt.
 func HashPassword(password string) ([]byte, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
