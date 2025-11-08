@@ -88,8 +88,10 @@ Make sure run `go get .` in the `notifier` directory as well.
 
 ### Scraper
 The module `scraper` located at `/scraper` from the root of the project also
-reads the database connections tring as `DATABASE_URL`. It takes no arguments
-one built and blocks until it has finished scraping or encounters an error.
+reads the database connections tring as `DATABASE_URL`. It can take arguments
+in the form of `-back N` and `-forward N` which specify the number of days in
+the past and future to scrape. It will delete all menu data that is older than
+the furthest day in the past that will be scraped based on specified values.
 
 ### Getting started
 
