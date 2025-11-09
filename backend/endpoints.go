@@ -29,7 +29,7 @@ func (s *Server) GetMenu(c *gin.Context, db *pgxpool.Pool) {
 		return
 	}
 
-	// GetMenuById requires a time.Time so we have to parse the day
+	// GetCacheMenu requires a time.Time so we have to parse the day
 	day_as_time, err := time.Parse(time.DateOnly, day)
 	if err != nil {
 		fmt.Println("/getMenu: invalid date: ", err)
