@@ -20,7 +20,7 @@ export const MainPageWelcome: FC = () => {
           Gopher Grub
         </h1>
         <p className="text-white">
-          Welcome, {displayName === "" ? "Student" : displayName}!
+          Welcome, {displayName}!
         </p>
         <p className="mb-8 max-w-lg text-xl text-gray-100">
           Get notified about your favorite dining hall meals
