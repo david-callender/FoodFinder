@@ -76,6 +76,11 @@ In bash, you can use the following command:
 Other *nix shells will have similar syntax, if you aren't using bash then you can
 look up specific methods to set variables in your particular shell.
 
+### Utils
+The go.mod files of all current modules, and any new modules, should be set up with
+`replace github.com/david-callender/FoodFinder/utils => ../utils` to allow any libraries
+within utils to be used as dependencies across all modules in the project.
+
 ### Notifier
 The module `notifier` located at `/notifier` from the root of the project
 reads its sending address as `NOTIFIER_EMAIL`, its SMTP password as
