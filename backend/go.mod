@@ -1,4 +1,4 @@
-module github.com/david-callender/FoodFinder
+module github.com/david-callender/FoodFinder/backend
 
 go 1.25.1
 

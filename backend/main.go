@@ -17,7 +17,7 @@ import (
 
 	"github.com/gin-contrib/cors" // cors handling later
 
-	docclient "github.com/david-callender/FoodFinder/dineocclient"
+	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
