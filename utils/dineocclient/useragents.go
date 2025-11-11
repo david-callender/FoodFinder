@@ -1,4 +1,4 @@
-package main
+package dineocclient
 
 var useragents []string = []string{
 	"Mozilla/5.0 (Windows NT 10.0; rv:120.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/119.0.0.0",

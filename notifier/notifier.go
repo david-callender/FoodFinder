@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	docclient "github.com/david-callender/FoodFinder/notifier/dineocclient"
+	docclient "github.com/david-callender/FoodFinder/dineocclient"
 	"github.com/jackc/pgx/v5"
 	"github.com/wneessen/go-mail"
 )
