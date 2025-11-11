@@ -1,19 +1,11 @@
 // see login.ts fo why is this commented out
 // "use server";
 
-import * as z from "zod";
-
-const SCHEMA = z.object({
-  accessToken: z.string(),
-});
-
-type SignupData = z.output<typeof SCHEMA>;
-
 export const signup = async (
   email: string,
   password: string,
   displayName: string
-): Promise<SignupData> => {
+): Promise<void> => {
   // Purpose : Creating new user credentials given fields email, password
   // Args:
   // email : string - user's email
@@ -33,9 +25,7 @@ export const signup = async (
 
   const json = (await response.json()) as unknown;
 
-  if (response.ok) {
-    return await SCHEMA.parseAsync(json);
-  } else {
+  if (!response.ok) {
     throw new Error("Call to /signup failed: " + JSON.stringify(json));
   }
 };
