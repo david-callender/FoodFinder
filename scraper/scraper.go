@@ -10,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	docclient "github.com/david-callender/FoodFinder/scraper/dineocclient"
+	docclient "github.com/david-callender/FoodFinder/dineocclient"
+
 	"github.com/jackc/pgx/v5"
 )
 

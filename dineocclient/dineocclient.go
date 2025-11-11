@@ -1,4 +1,4 @@
-package dineocclient
+package main
 
 import (
 	jsonv2 "encoding/json/v2"
