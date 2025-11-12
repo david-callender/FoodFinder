@@ -1,13 +1,18 @@
-package scraper
+package main
 
 import (
 	"context"
 	"errors"
-	docclient "github.com/david-callender/FoodFinder/dineocclient"
-	"github.com/jackc/pgx/v5"
+	"log"
 	"math/rand"
+	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Global variables
@@ -23,11 +28,27 @@ var hallsToScrape [6]string = [6]string{
 	"Bailey Dining Hall",
 }
 
-const PAST_SCRAPE_DAYS int = 7
-const SCRAPE_PERIOD int = 14
+var errNoConnString error = errors.New("DATABASE_URL is not set, cannot connect to database")
+var errNoScrapeBackArg error = errors.New("-back requires an argument")
+var errNoScrapeFwArg error = errors.New("-forward requires an argument")
+
+const DEFAULT_PAST_SCRAPE int = 7
+const DEFAULT_FUTURE_SCRAPE int = 14
 const SLEEP_MIN_SECS int = 5
 const SLEEP_MAX_DIFF int = 10
 const TIME_DAY time.Duration = 24 * time.Hour
+const UMN_SITE_ID string = "61d7515eb63f1e0e970debbe"
+
+// main(): calls runScraper() and logs any errors received, logging success otherwise.
+func main() {
+	err := runScraper()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err == nil {
+		log.Println("Successfully scraped menus to database")
+	}
+}
 
 // NON-EXPORTED FUNCTIONS
 func getLocations(siteId string) ([]docclient.Restaurant, error) {
@@ -90,11 +111,14 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	// once the transaction has been closed.
 	defer func() {
 		err = transaction.Rollback(context.Background())
+		if err == pgx.ErrTxClosed {
+			err = nil
+		}
 	}()
 
 	_, err = transaction.Exec(
 		context.Background(),
-		`DELETE FROM "DocCache" WHERE day=$1 AND location=$2 AND mealtime=$3;`,
+		`DELETE FROM "DocCache" WHERE day=$1 AND location=$2 AND mealtime=$3`,
 		dateFormatted, locationId, mealtimeNum,
 	)
 	if err != nil {
@@ -130,29 +154,75 @@ func scrapeMenuToDatabase(conn *pgx.Conn, locationId, periodName string, date ti
 	return err
 }
 
+// runScraper(): Reads the database URL from the environment, and optionally
+// a number of dates to scrape backward and forward from the current date. It
+// then calls ScrapeMenusToDatabase() with the collected values.
+func runScraper() error {
+	var err error
+	connString := os.Getenv("DATABASE_URL")
+	if connString == "" {
+		return errNoConnString
+	}
+
+	conn, err := pgx.Connect(context.Background(), connString)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = conn.Close(context.Background())
+	}()
+
+	dates := make([]time.Time, 0)
+	currentDate := time.Now().Truncate(time.Hour)
+	scrapeBackDays := DEFAULT_PAST_SCRAPE
+	scrapeForwardDays := DEFAULT_FUTURE_SCRAPE
+	for i, arg := range os.Args {
+		switch arg {
+		case "-back":
+			if len(os.Args) < (i + 2) {
+				return errNoScrapeBackArg
+			}
+			intArg, err := strconv.ParseInt(os.Args[i+1], 10, 0)
+			scrapeBackDays = int(intArg)
+			if err != nil {
+				return err
+			}
+		case "-forward":
+			if len(os.Args) < (i + 2) {
+				return errNoScrapeFwArg
+			}
+			intArg, err := strconv.ParseInt(os.Args[i+1], 10, 0)
+			if err != nil {
+				return err
+			}
+			scrapeForwardDays = int(intArg)
+		}
+	}
+	scrapePeriod := scrapeBackDays + scrapeForwardDays
+	for i := 0; i <= scrapePeriod; i++ {
+		timeOffset := (time.Duration(i) * TIME_DAY) - (time.Duration(scrapeBackDays) * TIME_DAY)
+		dates = append(dates, currentDate.Add(timeOffset))
+	}
+
+	log.Printf("Scraping from %d day(s) ago to %d day(s) from now\n", scrapeBackDays, scrapeForwardDays)
+	err = ScrapeMenusToDatabase(conn, dates, UMN_SITE_ID)
+	return err
+}
+
 // EXPORTED FUNCTIONS FOR USE BY IMPORTING CODE
 
-// ScrapeMenusToDatabase(conn (*pgx.Conn), siteId (string)): Takes a database
-// connection and a dineoncampus site ID. It will scrape all available menus
-// into the database.
-func ScrapeMenusToDatabase(conn *pgx.Conn, siteId string) error {
+// ScrapeMenusToDatabase(conn (*pgx.Conn), dates ([]time.Time, siteId (string)):
+// Takes a database connection, a dineoncampus site ID, and a list of dates to scrape.
+// Will scrape all available menus for the given days into the database.
+func ScrapeMenusToDatabase(conn *pgx.Conn, dates []time.Time, siteId string) error {
 	// Fetch all food locations at a given site
 	locations, err := getLocations(siteId)
 	if err != nil {
 		return err
 	}
 
-	// We need a list of times to scrape, for now this is a week before and
-	// a week after the current date. Set global constants to change this.
-	var dates []time.Time
-	currentDate := time.Now().Truncate(TIME_DAY)
-	for i := 0; i <= SCRAPE_PERIOD; i++ {
-		timeOffset := (time.Duration(i) * TIME_DAY) - (time.Duration(PAST_SCRAPE_DAYS) * TIME_DAY)
-		dates = append(dates, currentDate.Add(timeOffset))
-	}
-
-	// Delete all menus that are older than 1 week to prevent endlessly growing
-	// the db.
+	// Delete all menus that are older than the oldest given date to prevent
+	// endlessly growing the db.
 	_, err = conn.Exec(
 		context.Background(),
 		`DELETE FROM "DocCache" WHERE day < $1`,
