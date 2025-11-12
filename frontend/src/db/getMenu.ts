@@ -1,6 +1,10 @@
-"use server";
-
+import { redirect } from "next/navigation";
 import * as z from "zod";
+
+import { err, ERROR_SCHEMA, ok } from "./error";
+import { refresh } from "./refresh";
+
+import type { Result } from "./error";
 
 const SCHEMA = z.array(
   z.object({
@@ -25,8 +29,15 @@ export const getMenu = async (
   day: string,
   mealtime: "breakfast" | "lunch" | "dinner" | "everyday",
   diningHall: string
-): Promise<MenuData> => {
+): Promise<Result<MenuData, string>> => {
+  const accessToken = await refresh();
+
+  if (accessToken === undefined) {
+    redirect("/login");
+  }
+
   const searchParams = new URLSearchParams({
+    accessToken,
     day,
     mealtime,
     diningHall,
@@ -38,8 +49,13 @@ export const getMenu = async (
   const json = (await response.json()) as unknown;
 
   if (response.ok) {
-    return await SCHEMA.parseAsync(json);
-  } else {
-    throw new Error("Call to /getMenu failed :" + JSON.stringify(json));
+    return ok(await SCHEMA.parseAsync(json));
   }
+
+  const { detail } = await ERROR_SCHEMA.parseAsync(json);
+
+  if (detail === "unauthenticated") {
+    redirect("/login");
+  }
+  return err(detail);
 };

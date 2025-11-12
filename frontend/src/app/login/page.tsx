@@ -1,6 +1,6 @@
-import { LinkBar } from "@/components/LinkBar/LinkBar";
+import { LinkBar } from "@/components/LinkBar";
 
-import { LoginBox } from "../../components/LoginBox/LoginBox";
+import { LoginBox } from "../../components/LoginBox";
 
 import type { FC } from "react";
 

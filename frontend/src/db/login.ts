@@ -7,7 +7,6 @@ import * as z from "zod";
 
 const SCHEMA = z.object({
   displayName: z.string(),
-  accessToken: z.string(),
 });
 
 export type LoginData = z.output<typeof SCHEMA>;

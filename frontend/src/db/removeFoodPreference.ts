@@ -1,14 +1,20 @@
-"use server";
+// Purpose : updating preferred state of a certain meal to true using the "/addFoodPreference" endpoint
+// Args:
+// meal : string - literal string representing the meal
+// Returns:
 
-export const removeFoodPreference = async (
-  meal: string
-  // could make this boolean to confirm on the user end?
-): Promise<void> => {
-  // Purpose : updating preferred state of a certain meal to true using the "/addFoodPreference" endpoint
-  // Args:
-  // meal : string - literal string representing the meal
-  // Returns:
-  // void - posting data to server
+import { redirect } from "next/navigation";
+
+import { ERROR_SCHEMA } from "./error";
+import { refresh } from "./refresh";
+
+// void - posting data to server
+export const removeFoodPreference = async (meal: string): Promise<void> => {
+  const accessToken = await refresh();
+
+  if (accessToken === undefined) {
+    redirect("/login");
+  }
 
   const foodPreferenceURL = new URL(
     "/removeFoodPreference",
@@ -17,13 +23,21 @@ export const removeFoodPreference = async (
 
   const response = await fetch(foodPreferenceURL, {
     method: "POST",
-    body: JSON.stringify({ meal }),
+    credentials: "include",
+    body: JSON.stringify({ accessToken, meal }),
   });
 
-  if (!response.ok) {
-    const json = (await response.json()) as unknown;
-    throw new Error(
-      "Call to /removeFoodPreference failed: " + JSON.stringify(json)
-    );
+  if (response.ok) {
+    return;
   }
+
+  const json = (await response.json()) as unknown;
+
+  const { detail } = await ERROR_SCHEMA.parseAsync(json);
+
+  if (detail === "unauthenticated") {
+    redirect("/login");
+  }
+
+  throw new Error("Call to /removeFoodPreference failed: " + detail);
 };
