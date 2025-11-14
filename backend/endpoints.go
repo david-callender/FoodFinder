@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func (s *Server) GetMenu(c *gin.Context, db *pgxpool.Pool) {
+func (s *Server) GetMenu(c *gin.Context) {
 	//Method: GET
 
 	accessToken := c.Query("accessToken")
@@ -37,7 +36,7 @@ func (s *Server) GetMenu(c *gin.Context, db *pgxpool.Pool) {
 		return
 	}
 
-	menu, err := GetCacheMenu(db, dining_hall, mealtime, day_as_time)
+	menu, err := GetCacheMenu(s.DB, dining_hall, mealtime, day_as_time)
 	if err != nil {
 		fmt.Println("/getMenu: failed getting menu data: ", err)
 		c.JSON(
@@ -47,7 +46,7 @@ func (s *Server) GetMenu(c *gin.Context, db *pgxpool.Pool) {
 		return
 	}
 
-	userPrefs, err := GetUserPrefs(db, uid)
+	userPrefs, err := GetUserPrefs(s.DB, uid)
 	if err != nil {
 		fmt.Println("/getMenu: failed getting user preferences: ", err)
 		c.JSON(
@@ -57,8 +56,8 @@ func (s *Server) GetMenu(c *gin.Context, db *pgxpool.Pool) {
 		return
 	}
 
-	for _, option := range menu {
-		option.IsPreferred = userPrefs[option.Meal]
+	for i := range menu {
+		menu[i].IsPreferred = userPrefs[menu[i].Meal]
 	}
 
 	c.JSON(http.StatusOK, menu)
