@@ -96,9 +96,9 @@ func GetByEmail(db *pgxpool.Pool, email string) (*User, error) {
 	user.Email = email
 
 	err := db.QueryRow(context.Background(),
-		`SELECT "id", "password" FROM "Users" WHERE "email"=$1`,
+		`SELECT "id", "password", "displayName" FROM "Users" WHERE "email"=$1`,
 		email,
-	).Scan(&user.ID, &user.Password)
+	).Scan(&user.ID, &user.Password, &user.DisplayName)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
