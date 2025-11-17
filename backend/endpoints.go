@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	docclient "github.com/david-callender/FoodFinder/dineocclient"
+	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
 
 	"github.com/gin-gonic/gin"
 )
