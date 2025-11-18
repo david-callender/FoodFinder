@@ -1,21 +1,18 @@
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import tsParser from "@typescript-eslint/parser";
+import { defineConfig } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
 import prettier from "eslint-config-prettier";
 import importX from "eslint-plugin-import-x";
 import react from "eslint-plugin-react";
 import unicorn from "eslint-plugin-unicorn";
 import ts from "typescript-eslint";
 
-const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
-
-export default ts.config(
+export default defineConfig(
   js.configs.recommended,
   ts.configs.strictTypeChecked,
   ts.configs.stylisticTypeChecked,
-  ...compat.config({
-    extends: ["next/core-web-vitals", "next/typescript"],
-  }),
+  ...nextVitals,
   react.configs.flat.recommended,
   react.configs.flat["jsx-runtime"],
   importX.flatConfigs.recommended,
@@ -116,6 +113,7 @@ export default ts.config(
       // Other Rules
       eqeqeq: ["warn", "always", { null: "ignore" }],
       "@typescript-eslint/no-misused-promises": "off",
+      "react-hooks/set-state-in-effect": "off",
     },
   },
   {
