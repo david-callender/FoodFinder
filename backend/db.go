@@ -32,12 +32,13 @@ type Server struct {
 }
 
 var ErrEmailInUse = errors.New("email already in use")
+var ErrInvalidPeriodName = errors.New("invalid period name")
 
 var periodNameToNum map[string]int = map[string]int{
 	"breakfast": 0,
 	"lunch":     1,
 	"dinner":    2,
-	"every day": 3,
+	"everyday":  3,
 }
 
 // Connects to the db and returns a connection pool.
@@ -122,6 +123,10 @@ func GetCacheMenu(db *pgxpool.Pool, locationId string, periodName string, date t
 	menu := make([]MealWithPreference, 0)
 	dateFormatted := date.Format(time.DateOnly)
 
+	if _, ok := periodNameToNum[periodName]; !ok {
+		return nil, ErrInvalidPeriodName
+	}
+
 	menuRows, err := db.Query(
 		context.Background(),
 		`SELECT "meal", "mealid"
@@ -132,7 +137,7 @@ func GetCacheMenu(db *pgxpool.Pool, locationId string, periodName string, date t
 		dateFormatted, locationId, periodNameToNum[periodName],
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return menu, nil
+
 	} else if err != nil {
 		return nil, fmt.Errorf("GetMenuCache: failed db query: %v", err)
 	}
