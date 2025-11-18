@@ -37,7 +37,13 @@ func (s *Server) GetMenu(c *gin.Context) {
 	}
 
 	menu, err := GetCacheMenu(s.DB, dining_hall, mealtime, day_as_time)
-	if err != nil {
+	if errors.Is(err, ErrInvalidPeriodName) {
+		fmt.Println("/getMenu: received invalid period name")
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"detail": "invalid period name"},
+		)
+	} else if err != nil {
 		fmt.Println("/getMenu: failed getting menu data: ", err)
 		c.JSON(
 			http.StatusInternalServerError,

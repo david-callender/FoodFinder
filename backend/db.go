@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
+	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -137,7 +139,20 @@ func GetCacheMenu(db *pgxpool.Pool, locationId string, periodName string, date t
 		dateFormatted, locationId, periodNameToNum[periodName],
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
+		log.Println("Missed Cache, using dineocclient directly")
+		doccMenu, err := docclient.GetMenuById(locationId, periodName, date)
 
+		if err != nil {
+			return nil, err
+		}
+
+		for _, doccMeal := range doccMenu.Options {
+			meal := MealWithPreference{
+				Meal: doccMeal.Name,
+				Id:   doccMeal.Id,
+			}
+			menu = append(menu, meal)
+		}
 	} else if err != nil {
 		return nil, fmt.Errorf("GetMenuCache: failed db query: %v", err)
 	}
