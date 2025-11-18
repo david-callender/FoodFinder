@@ -53,6 +53,7 @@ export const SignUpBox: FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   function changePhoneNumber(e: ChangeEvent<HTMLInputElement>): void {
     // Purpose : controlling state for phone number field in form
@@ -83,24 +84,29 @@ export const SignUpBox: FC = () => {
     // prevents refresh of page
     event.preventDefault();
 
-    const displayName = "Temporary"; // TODO [misc.] : add displayName field to signup form so user can give their own usernames
-    // console.log(displayName); // to make linter happy
+    await signup(email, password, displayName.trim());
 
-    // request to login endpoint
-    // refresh_token cookie is set here
-    const response = await signup(email, password, displayName);
-
+    localStorage.setItem("displayName", displayName.trim());
     //  TODO [backend] : Handling a "user exists" error from backend (or if they already have cookies)
     // TODO [misc.] : Handle User phone numbers without a US country code
 
-    // setting access token
-    localStorage.setItem("access_token", response.accessToken);
     router.push("/");
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col">
+        <input
+          type="text"
+          value={displayName}
+          onChange={(e) => {
+            setDisplayName(e.target.value);
+          }}
+          className="m-3 place-self-center rounded-lg bg-gray-800 p-2"
+          name="displayName"
+          placeholder="Display Name"
+          required
+        />
         <input
           type="email"
           value={email}

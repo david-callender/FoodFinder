@@ -1,6 +1,6 @@
 import { LinkBar } from "@/components/LinkBar";
 
-import { SignUpBox } from "../../components/SignUpBox/SignUpBox";
+import { SignUpBox } from "../../components/SignUpBox";
 
 import type { FC } from "react";
 
