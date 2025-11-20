@@ -138,7 +138,21 @@ func GetCacheMenu(db *pgxpool.Pool, locationId string, periodName string, date t
 			AND "mealtime"=$3`,
 		dateFormatted, locationId, periodNameToNum[periodName],
 	)
-	if errors.Is(err, pgx.ErrNoRows) {
+	if err != nil {
+		return nil, fmt.Errorf("GetMenuCache: failed db query: %v", err)
+	}
+	defer menuRows.Close()
+
+	menu, err = pgx.CollectRows(menuRows, func(row pgx.CollectableRow) (MealWithPreference, error) {
+		var mealName, mealId string
+		err := row.Scan(&mealName, &mealId)
+		meal := MealWithPreference{Meal: mealName, Id: mealId}
+		return meal, err
+	})
+	if err != nil {
+		return nil, fmt.Errorf("GetCacheMenu: failed generating menu: %v", err)
+	}
+	if len(menu) == 0 {
 		log.Println("Missed Cache, using dineocclient directly")
 		doccMenu, err := docclient.GetMenuById(locationId, periodName, date)
 
@@ -153,19 +167,6 @@ func GetCacheMenu(db *pgxpool.Pool, locationId string, periodName string, date t
 			}
 			menu = append(menu, meal)
 		}
-	} else if err != nil {
-		return nil, fmt.Errorf("GetMenuCache: failed db query: %v", err)
-	}
-	defer menuRows.Close()
-
-	menu, err = pgx.CollectRows(menuRows, func(row pgx.CollectableRow) (MealWithPreference, error) {
-		var mealName, mealId string
-		err := row.Scan(&mealName, &mealId)
-		meal := MealWithPreference{Meal: mealName, Id: mealId}
-		return meal, err
-	})
-	if err != nil {
-		return nil, fmt.Errorf("GetCacheMenu: failed generating menu: %v", err)
 	}
 
 	return menu, nil
