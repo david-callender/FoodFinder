@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
+	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -31,6 +34,14 @@ type Server struct {
 }
 
 var ErrEmailInUse = errors.New("email already in use")
+var ErrInvalidPeriodName = errors.New("invalid period name")
+
+var periodNameToNum map[string]int = map[string]int{
+	"breakfast": 0,
+	"lunch":     1,
+	"dinner":    2,
+	"everyday":  3,
+}
 
 // Connects to the db and returns a connection pool.
 func connectDB() (*pgxpool.Pool, error) {
@@ -108,6 +119,86 @@ func GetByEmail(db *pgxpool.Pool, email string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func GetCacheMenu(db *pgxpool.Pool, locationId string, periodName string, date time.Time) ([]MealWithPreference, error) {
+	menu := make([]MealWithPreference, 0)
+	dateFormatted := date.Format(time.DateOnly)
+
+	if _, ok := periodNameToNum[periodName]; !ok {
+		return nil, ErrInvalidPeriodName
+	}
+
+	menuRows, err := db.Query(
+		context.Background(),
+		`SELECT "meal", "mealid"
+			FROM "DocCache"
+			WHERE "day"=$1
+			AND "location"=$2
+			AND "mealtime"=$3`,
+		dateFormatted, locationId, periodNameToNum[periodName],
+	)
+	if err != nil {
+		return nil, fmt.Errorf("GetMenuCache: failed db query: %v", err)
+	}
+	defer menuRows.Close()
+
+	menu, err = pgx.CollectRows(menuRows, func(row pgx.CollectableRow) (MealWithPreference, error) {
+		var mealName, mealId string
+		err := row.Scan(&mealName, &mealId)
+		meal := MealWithPreference{Meal: mealName, Id: mealId}
+		return meal, err
+	})
+	if err != nil {
+		return nil, fmt.Errorf("GetCacheMenu: failed generating menu: %v", err)
+	}
+	if len(menu) == 0 {
+		log.Println("Missed Cache, using dineocclient directly")
+		doccMenu, err := docclient.GetMenuById(locationId, periodName, date)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, doccMeal := range doccMenu.Options {
+			meal := MealWithPreference{
+				Meal: doccMeal.Name,
+				Id:   doccMeal.Id,
+			}
+			menu = append(menu, meal)
+		}
+	}
+
+	return menu, nil
+}
+
+// Produces a map of preferences to true for a given user.
+func GetUserPrefs(db *pgxpool.Pool, uid int) (map[string]bool, error) {
+	prefs := make(map[string]bool)
+
+	prefRows, err := db.Query(
+		context.Background(),
+		`SELECT "preference" FROM "Preferences" WHERE "user"=$1`,
+		uid,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return prefs, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("GetUserPrefs: failed database query: %v", err)
+	}
+	defer prefRows.Close()
+
+	for prefRows.Next() {
+		var pref string
+		err = prefRows.Scan(&pref)
+		if err != nil {
+			return nil, fmt.Errorf("GetUserPrefs: failed reading row: %v", err)
+		}
+
+		prefs[pref] = true
+	}
+
+	return prefs, err
 }
 
 // Hashes a password using bcrypt.

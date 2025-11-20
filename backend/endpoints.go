@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +20,7 @@ func (s *Server) GetMenu(c *gin.Context) {
 	dining_hall := c.Query("diningHall")
 	mealtime := c.Query("mealtime")
 
-	_, err := s.protectRoute(accessToken)
+	uid, err := s.protectRoute(accessToken)
 
 	if err != nil {
 		fmt.Println("/getMenu: not authenticated: ", err)
@@ -30,7 +28,7 @@ func (s *Server) GetMenu(c *gin.Context) {
 		return
 	}
 
-	// GetMenuById requires a time.Time so we have to parse the day
+	// GetCacheMenu requires a time.Time so we have to parse the day
 	day_as_time, err := time.Parse(time.DateOnly, day)
 	if err != nil {
 		fmt.Println("/getMenu: invalid date: ", err)
@@ -38,26 +36,37 @@ func (s *Server) GetMenu(c *gin.Context) {
 		return
 	}
 
-	// TODO: fetch via SQL query from our database instead of directly using dineocclient
-	menu, err := docclient.GetMenuById(dining_hall, mealtime, day_as_time)
-	if err != nil {
+	menu, err := GetCacheMenu(s.DB, dining_hall, mealtime, day_as_time)
+	if errors.Is(err, ErrInvalidPeriodName) {
+		fmt.Println("/getMenu: received invalid period name")
+		c.JSON(
+			http.StatusBadRequest,
+			gin.H{"detail": "invalid period name"},
+		)
+	} else if err != nil {
 		fmt.Println("/getMenu: failed getting menu data: ", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"detail": "failed getting menu data"})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"detail": "failed getting menu data"},
+		)
 		return
 	}
 
-	// This has to be done because the Meal struct doesn't have preferences and has
-	// different field names than what the frontend expects.
-	meal_list := make([]MealWithPreference, 0, 20)
-	for _, option := range menu.Options {
-		meal_list = append(meal_list, MealWithPreference{
-			Meal:        option.Name,
-			IsPreferred: false,
-			Id:          option.Id,
-		})
+	userPrefs, err := GetUserPrefs(s.DB, uid)
+	if err != nil {
+		fmt.Println("/getMenu: failed getting user preferences: ", err)
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"detail": "failed getting user preferences"},
+		)
+		return
 	}
 
-	c.JSON(http.StatusOK, meal_list)
+	for i := range menu {
+		menu[i].IsPreferred = userPrefs[menu[i].Meal]
+	}
+
+	c.JSON(http.StatusOK, menu)
 }
 
 func (s *Server) addFoodPreference(c *gin.Context) {
