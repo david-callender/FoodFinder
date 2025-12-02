@@ -2,10 +2,8 @@ module scraper
 
 go 1.25.1
 
-replace github.com/david-callender/FoodFinder/utils => ../utils
-
 require (
-	github.com/david-callender/FoodFinder/utils v0.0.0-00010101000000-000000000000
+	github.com/david-callender/FoodFinder/utils v0.0.0-20251120174545-7c343183eacf
 	github.com/jackc/pgx/v5 v5.7.6
 )
 
