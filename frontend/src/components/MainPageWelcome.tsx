@@ -1,15 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import type { FC } from "react";
 
 export const MainPageWelcome: FC = () => {
-  const [displayName, setDisplayName] = useState("Student");
+  const [displayName, setDisplayName] = useState<string>();
 
   useEffect(() => {
     const displayName = localStorage.getItem("displayName");
-    setDisplayName(displayName ?? "Student");
+    setDisplayName(displayName ?? undefined);
   }, []);
 
   return (
@@ -19,18 +20,20 @@ export const MainPageWelcome: FC = () => {
         <h1 className="mb-4 text-5xl font-bold text-white drop-shadow-lg">
           Gopher Grub
         </h1>
-        <p className="text-white">
-          Welcome, {displayName}!
-        </p>
+        {displayName === undefined ? (
+          <p className="text-white">Welcome!</p>
+        ) : (
+          <p className="text-white">Welcome, {displayName}!</p>
+        )}
         <p className="mb-8 max-w-lg text-xl text-gray-100">
           Get notified about your favorite dining hall meals
         </p>
-        <a
+        <Link
           href="/menu"
           className="rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow drop-shadow-2xl transition hover:bg-red-700"
         >
           View Menu
-        </a>
+        </Link>
       </main>
     </>
   );

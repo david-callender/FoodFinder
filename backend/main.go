@@ -51,6 +51,7 @@ func main() {
 	router.POST("/refresh", s.Refresh)
 	router.POST("/signup", s.Signup)
 	router.POST("/login", s.Login)
+	router.POST("/logout", s.Logout)
 	router.GET("/getMenu", s.GetMenu)
 	router.POST("/addFoodPreference", s.addFoodPreference)
 	router.POST("/removeFoodPreference", s.removeFoodPreference)

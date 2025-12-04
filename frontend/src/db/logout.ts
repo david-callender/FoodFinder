@@ -1,5 +1,3 @@
-"use server";
-
 export const logout = async (): Promise<void> => {
   // Purpose : Revoking current credentials for user session using "/logout" endpoint
   // Args:
@@ -12,6 +10,7 @@ export const logout = async (): Promise<void> => {
   // TODO [misc.] : Maybe revoke cookies?
   const response = await fetch(logoutURL, {
     method: "POST",
+    credentials: "include", // need this for receive cookies w/ cors
   });
 
   localStorage.removeItem("displayName");

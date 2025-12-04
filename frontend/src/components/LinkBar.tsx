@@ -9,11 +9,11 @@ import GopherGrubLogo from "./res/GopherGrubLogo.png";
 import type { FC } from "react";
 
 export const LinkBar: FC = () => {
-  const [displayName, setDisplayName] = useState("Student");
+  const [displayName, setDisplayName] = useState<string>();
 
   useEffect(() => {
     const displayName = localStorage.getItem("displayName");
-    setDisplayName(displayName ?? "Student");
+    setDisplayName(displayName ?? undefined);
   }, []);
 
   return (
@@ -36,21 +36,34 @@ export const LinkBar: FC = () => {
             className="justify-self-center"
           />
 
-          <div className="self-center justify-self-end">
-            <span className="mr-2 text-white">{displayName}</span>
-            <Link
-              href="/login"
-              className="mr-2 rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700"
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700"
-            >
-              Sign Up
-            </Link>
-          </div>
+          {displayName === undefined ? (
+            <div className="self-center justify-self-end">
+              <Link
+                href="/login"
+                className="mr-2 rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700"
+              >
+                Sign Up
+              </Link>
+            </div>
+          ) : (
+            <div className="self-center justify-self-end">
+              <span className="mr-2 text-white">
+                Signed in as {displayName}
+              </span>
+              <Link
+                href={"/logout"}
+                className="mr-2 rounded-xl bg-red-900 px-4 py-2 font-semibold text-white shadow transition hover:bg-red-700"
+              >
+                Logout
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
     </>
