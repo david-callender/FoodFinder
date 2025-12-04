@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+	log.Println("starting")
+
 	env_err := godotenv.Load()
 	if env_err != nil {
 		log.Fatalln("Error loading .env file")
@@ -26,14 +29,18 @@ func main() {
 		log.Fatalln("failed to initialize database pool: ", err)
 		return
 	}
+	// gin.SetMode(gin.ReleaseMode)
+
 	defer db.Close()
 
 	s := &Server{DB: db, LoggedIn: map[int]bool{}}
 
 	router := gin.Default()
 
+	corsOrigin := os.Getenv("CORS_ORIGIN");
+
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // Next.js origin
+		AllowOrigins:     []string{corsOrigin}, // Next.js origin
 		AllowMethods:     []string{"POST", "GET", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -48,5 +55,9 @@ func main() {
 	router.POST("/addFoodPreference", s.addFoodPreference)
 	router.POST("/removeFoodPreference", s.removeFoodPreference)
 
-	router.Run("localhost:8080")
+	hostname := os.Getenv("HOST_ADDR")
+
+	log.Println("started on " + hostname)
+
+	router.Run(hostname)
 }

@@ -23,9 +23,8 @@ export const signup = async (
     body: JSON.stringify({ email, password, displayName }),
   });
 
-  const json = (await response.json()) as unknown;
-
   if (!response.ok) {
+    const json = (await response.json()) as unknown;
     throw new Error("Call to /signup failed: " + JSON.stringify(json));
   }
 };
