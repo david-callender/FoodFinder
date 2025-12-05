@@ -33,6 +33,8 @@ export const MenuManager: FC = () => {
     // Description : handling submit of search query
     e.preventDefault();
 
+    setError("");
+
     const menu = await getMenu(date, time, diningHall);
     if (menu.ok) {
       setMenuItems(menu.data);
@@ -51,7 +53,13 @@ export const MenuManager: FC = () => {
             setTime={setTime}
             handleSubmit={handleSubmit}
           />
-          <p>{error}</p>
+          {error === "" ? (
+            <></>
+          ) : (
+            <p className="place-self-center">
+              An error occurred: {error}. Please try again.
+            </p>
+          )}
           <Menu items={menuItems} />
         </div>
       </div>

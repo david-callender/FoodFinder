@@ -28,13 +28,17 @@ export const LikeButton: FC<Props> = ({ item, handlePreferenceChange }) => {
   async function postLike(item: MenuItem): Promise<void> {
     const dbCall = item.isPreferred ? removeFoodPreference : addFoodPreference;
 
-    await dbCall(item.meal);
+    const result = await dbCall(item.meal);
 
-    // automatically setting like button state to opposite of current state.
-    // Should not need to call this function otherwise.
-    setLiked(!item.isPreferred);
-    // setting preference in parent Menu component on item.
-    handlePreferenceChange(item);
+    if (result.ok) {
+      // automatically setting like button state to opposite of current state.
+      // Should not need to call this function otherwise.
+      setLiked(!item.isPreferred);
+      // setting preference in parent Menu component on item.
+      handlePreferenceChange(item);
+    } else {
+      alert("Error changing meal preference: " + result.err);
+    }
   }
 
   // like button

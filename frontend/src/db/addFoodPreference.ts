@@ -1,14 +1,18 @@
 import { redirect } from "next/navigation";
 
-import { ERROR_SCHEMA } from "./error";
+import { handleError, ok } from "./error";
 import { refresh } from "./refresh";
+
+import type { Result } from "./error";
 
 // Purpose : POSTing meal, updating preferred state using the "/add_food_preference" endpoint
 // Args:
 // meal : string - literal string representing the meal
 // Returns
 // void - posting data to server
-export const addFoodPreference = async (meal: string): Promise<void> => {
+export const addFoodPreference = async (
+  meal: string
+): Promise<Result<undefined, string>> => {
   const accessToken = await refresh();
 
   if (accessToken === undefined) {
@@ -27,16 +31,10 @@ export const addFoodPreference = async (meal: string): Promise<void> => {
   });
 
   if (response.ok) {
-    return;
+    return ok(undefined);
   }
 
   const json = (await response.json()) as unknown;
 
-  const { detail } = await ERROR_SCHEMA.parseAsync(json);
-
-  if (detail === "unauthenticated") {
-    redirect("/login");
-  }
-
-  throw new Error("Call to /addFoodPreference failed: " + detail);
+  return await handleError(json);
 };

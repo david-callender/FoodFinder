@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import * as z from "zod";
 
-import { err, ERROR_SCHEMA, ok } from "./error";
+import { handleError, ok } from "./error";
 import { refresh } from "./refresh";
 
 import type { Result } from "./error";
@@ -52,10 +52,5 @@ export const getMenu = async (
     return ok(await SCHEMA.parseAsync(json));
   }
 
-  const { detail } = await ERROR_SCHEMA.parseAsync(json);
-
-  if (detail === "unauthenticated") {
-    redirect("/login");
-  }
-  return err(detail);
+  return await handleError(json);
 };

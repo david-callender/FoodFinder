@@ -15,12 +15,15 @@ export const LoginBox: FC = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ): Promise<void> {
     // prevents refresh of page
     event.preventDefault();
+
+    setError("");
 
     // 9/27: endpoint currently assumes all users are valid.
     // At some point, when validation is implemented,
@@ -31,10 +34,14 @@ export const LoginBox: FC = () => {
     // refresh_token cookie is set here
     const response = await login(email, password);
 
-    localStorage.setItem("displayName", response.displayName);
+    if (response.ok) {
+      localStorage.setItem("displayName", response.data.displayName);
 
-    // redirect
-    router.push("/");
+      // redirect
+      router.push("/");
+    } else {
+      setError(response.err);
+    }
   }
 
   // final login box component
@@ -72,6 +79,13 @@ export const LoginBox: FC = () => {
             Sign Up Here
           </a>
         </p>
+        {error === "" ? (
+          <></>
+        ) : (
+          <p className="place-self-center">
+            An error occurred: {error}. Please try again.
+          </p>
+        )}
       </div>
     </form>
   );

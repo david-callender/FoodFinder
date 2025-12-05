@@ -109,6 +109,7 @@ export default defineConfig(
       ],
       "unicorn/prevent-abbreviations": "off",
       "unicorn/switch-case-braces": "off",
+      "unicorn/no-useless-undefined": "off",
 
       // Other Rules
       eqeqeq: ["warn", "always", { null: "ignore" }],

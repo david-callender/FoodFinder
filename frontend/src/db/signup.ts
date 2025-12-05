@@ -1,11 +1,15 @@
 // see login.ts fo why is this commented out
 // "use server";
 
+import { handleError, ok } from "./error";
+
+import type { Result } from "./error";
+
 export const signup = async (
   email: string,
   password: string,
   displayName: string
-): Promise<void> => {
+): Promise<Result<undefined, string>> => {
   // Purpose : Creating new user credentials given fields email, password
   // Args:
   // email : string - user's email
@@ -23,8 +27,11 @@ export const signup = async (
     body: JSON.stringify({ email, password, displayName }),
   });
 
-  if (!response.ok) {
-    const json = (await response.json()) as unknown;
-    throw new Error("Call to /signup failed: " + JSON.stringify(json));
+  if (response.ok) {
+    return ok(undefined);
   }
+
+  const json = (await response.json()) as unknown;
+
+  return await handleError(json);
 };

@@ -1,4 +1,8 @@
-export const logout = async (): Promise<void> => {
+import { handleError, ok } from "./error";
+
+import type { Result } from "./error";
+
+export const logout = async (): Promise<Result<undefined, string>> => {
   // Purpose : Revoking current credentials for user session using "/logout" endpoint
   // Args:
   // None
@@ -13,10 +17,12 @@ export const logout = async (): Promise<void> => {
     credentials: "include", // need this for receive cookies w/ cors
   });
 
-  localStorage.removeItem("displayName");
-
-  if (!response.ok) {
-    const json = (await response.json()) as unknown;
-    throw new Error("Call to /logout failed: " + JSON.stringify(json));
+  if (response.ok) {
+    localStorage.removeItem("displayName");
+    return ok(undefined);
   }
+
+  const json = (await response.json()) as unknown;
+
+  return await handleError(json);
 };

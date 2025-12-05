@@ -54,6 +54,7 @@ export const SignUpBox: FC = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [error, setError] = useState("");
 
   function changePhoneNumber(e: ChangeEvent<HTMLInputElement>): void {
     // Purpose : controlling state for phone number field in form
@@ -84,13 +85,19 @@ export const SignUpBox: FC = () => {
     // prevents refresh of page
     event.preventDefault();
 
-    await signup(email, password, displayName.trim());
+    setError("");
 
-    localStorage.setItem("displayName", displayName.trim());
-    //  TODO [backend] : Handling a "user exists" error from backend (or if they already have cookies)
-    // TODO [misc.] : Handle User phone numbers without a US country code
+    const result = await signup(email, password, displayName.trim());
 
-    router.push("/");
+    if (result.ok) {
+      localStorage.setItem("displayName", displayName.trim());
+      //  TODO [backend] : Handling a "user exists" error from backend (or if they already have cookies)
+      // TODO [misc.] : Handle User phone numbers without a US country code
+
+      router.push("/");
+    } else {
+      setError(result.err);
+    }
   }
 
   return (
@@ -149,6 +156,13 @@ export const SignUpBox: FC = () => {
             Login Here
           </a>
         </p>
+        {error === "" ? (
+          <></>
+        ) : (
+          <p className="place-self-center">
+            An error occurred: {error}. Please try again.
+          </p>
+        )}
       </div>
     </form>
   );

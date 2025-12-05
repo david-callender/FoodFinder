@@ -11,8 +11,15 @@ export const Logout: FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    void logout();
-    router.push("/");
+    void (async (): Promise<void> => {
+      const result = await logout();
+
+      if (result.ok) {
+        router.push("/");
+      } else {
+        alert("Error logging out: " + result.err);
+      }
+    })();
   }, [router]);
 
   return <></>;

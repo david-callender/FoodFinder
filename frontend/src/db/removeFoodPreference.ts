@@ -5,11 +5,15 @@
 
 import { redirect } from "next/navigation";
 
-import { ERROR_SCHEMA } from "./error";
+import { handleError, ok } from "./error";
 import { refresh } from "./refresh";
 
+import type { Result } from "./error";
+
 // void - posting data to server
-export const removeFoodPreference = async (meal: string): Promise<void> => {
+export const removeFoodPreference = async (
+  meal: string
+): Promise<Result<undefined, string>> => {
   const accessToken = await refresh();
 
   if (accessToken === undefined) {
@@ -28,16 +32,10 @@ export const removeFoodPreference = async (meal: string): Promise<void> => {
   });
 
   if (response.ok) {
-    return;
+    return ok(undefined);
   }
 
   const json = (await response.json()) as unknown;
 
-  const { detail } = await ERROR_SCHEMA.parseAsync(json);
-
-  if (detail === "unauthenticated") {
-    redirect("/login");
-  }
-
-  throw new Error("Call to /removeFoodPreference failed: " + detail);
+  return await handleError(json);
 };

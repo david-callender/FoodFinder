@@ -1,9 +1,8 @@
-// if we use this, then the set-cookies headers are never accepted/
-// I don't know what the benefits of having this here would be, so I'll just leave
-// it commented out so that we have it for later.
-// "use server";
-
 import * as z from "zod";
+
+import { handleError, ok } from "./error";
+
+import type { Result } from "./error";
 
 const SCHEMA = z.object({
   displayName: z.string(),
@@ -14,7 +13,7 @@ export type LoginData = z.output<typeof SCHEMA>;
 export const login = async (
   email: string,
   password: string
-): Promise<LoginData> => {
+): Promise<Result<LoginData, string>> => {
   // Purpose : Login into/check credentials of a user
   // Args:
   // email : string - users email
@@ -33,8 +32,8 @@ export const login = async (
   const json = (await response.json()) as unknown;
 
   if (response.ok) {
-    return await SCHEMA.parseAsync(json);
-  } else {
-    throw new Error("Call to /login failed: " + JSON.stringify(json));
+    return ok(await SCHEMA.parseAsync(json));
   }
+
+  return await handleError(json);
 };
