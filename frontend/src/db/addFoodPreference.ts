@@ -23,7 +23,7 @@ export const addFoodPreference = async (
     "/addFoodPreference",
     process.env.NEXT_PUBLIC_BACKEND_URL
   );
-
+  
   const response = await fetch(foodPreferenceURL, {
     method: "POST",
     credentials: "include",
@@ -33,7 +33,7 @@ export const addFoodPreference = async (
   if (response.ok) {
     return ok(undefined);
   }
-
+  
   const json = (await response.json()) as unknown;
 
   return await handleError(json);

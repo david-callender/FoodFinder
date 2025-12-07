@@ -37,7 +37,12 @@ export const MenuManager: FC = () => {
 
     const menu = await getMenu(date, time, diningHall);
     if (menu.ok) {
-      setMenuItems(menu.data);
+      if (menu.data.length == 0) {
+        setError("No Food Data");
+      } else {
+        setMenuItems(menu.data);
+      }
+      
     } else {
       setError(menu.err);
     }
