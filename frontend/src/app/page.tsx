@@ -1,6 +1,8 @@
+import { Footer } from "@/components/Footer";
 import { LinkBar } from "@/components/LinkBar";
 import { MainBackground } from "@/components/MainBackground";
 import { MainPageWelcome } from "@/components/MainPageWelcome";
+
 
 import type { FC } from "react";
 
@@ -18,9 +20,9 @@ const Home: FC = () => {
 
       <MainPageWelcome />
 
-      <footer className="relative z-10 border-t border-white/20 bg-black/30 py-4 text-center text-sm text-gray-200">
-        © {new Date().getFullYear()} Gopher Grub · University of Minnesota
-      </footer>
+
+      
+      <Footer />
     </div>
   );
 };
