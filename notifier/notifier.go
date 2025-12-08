@@ -10,6 +10,7 @@ import (
 
 	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 	"github.com/wneessen/go-mail"
 )
 
@@ -17,16 +18,17 @@ import (
 // Generic Global Values
 var mealtimeIndexer = [4]string{"breakfast", "lunch", "dinner", "every day"}
 
-const EMAIL_HOST = "<EMAIL_SERVER_HOSTNAME>"
+const EMAIL_HOST = "email-smtp.us-east-2.amazonaws.com"
 const NOTIFICATION_SUBJECT = "GopherGrub Notification"
 const TIME_DAY = 24 * time.Hour
-const UMN_SITE_ID = "61d7515eb63f1e0e970debbei"
+const UMN_SITE_ID = "61d7515eb63f1e0e970debbe"
 
 // Errors
 var errNoConnString = errors.New("notifier: DATABASE_URL is not set, we cannot connect to the database")
 var errNoEmail = errors.New("notifier: NOTIFIER_EMAIL is not set, we don't have an email address")
 var errNoPass = errors.New("notifier: NOTIFIER_PASSWORD is not set, we cannot authenticate with no password")
 var errTimeNotProvided = errors.New("notifier: Please provide a ISO YYYY-MM-DD date string as an argument")
+var errNoUname = errors.New("notifier: NOTIFIER_UNAME is not set, we cannot authenticate with no user name")
 
 // Types
 type mealNotification struct {
@@ -40,6 +42,8 @@ type mealNotification struct {
 
 // The main function. Runs runNotifier() and catches any errors it produces.
 func main() {
+	godotenv.Load()
+
 	err := runNotifier()
 
 	if err != nil {
@@ -54,7 +58,7 @@ func main() {
 // mapping from integer user ids to their emails. Prepares a slice of *mail.Msg
 // structs to be sent out to users. Returns a nil slice and non-nil error on
 // failure.
-func generateMessages(notificationTable map[int][]mealNotification, emailTable map[int]string) ([]*mail.Msg, error) {
+func generateMessages(notificationTable map[int][]mealNotification, emailTable map[int]string, dateString string) ([]*mail.Msg, error) {
 	locationIdToName, err := getLocations(UMN_SITE_ID)
 	if err != nil {
 		return nil, err
@@ -63,6 +67,10 @@ func generateMessages(notificationTable map[int][]mealNotification, emailTable m
 	var messages = make([]*mail.Msg, 0)
 	for userId, notifs := range notificationTable {
 		message := mail.NewMsg()
+		notifierEmail := os.Getenv("NOTIFIER_EMAIL")
+		if notifierEmail == "" {
+			return nil, errNoEmail
+		}
 		errs := errors.Join(
 			message.From(os.Getenv("NOTIFIER_EMAIL")),
 			message.ToFromString(emailTable[userId]),
@@ -72,7 +80,7 @@ func generateMessages(notificationTable map[int][]mealNotification, emailTable m
 		}
 		message.Subject(NOTIFICATION_SUBJECT)
 		message.SetBulk()
-		messageBody := "Some of your favorite foods are available today!\n\n"
+		messageBody := fmt.Sprintf("Some of your favorite foods are available on %s !\n\n", dateString)
 		for _, notif := range notifs {
 			messageBody += fmt.Sprintf(
 				"- %s at %s during %s time.\n",
@@ -140,7 +148,7 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 
 	usersToNotify, err := conn.Query(
 		context.Background(),
-		`SELECT user, meal, location, mealtime 
+		`SELECT "user", "meal", "location", "mealtime" 
 			FROM "Preferences"
 			JOIN "DocCache" 
 			ON "Preferences".preference = "DocCache".meal 
@@ -164,7 +172,8 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 	}
 	usersToNotify.Close()
 
-	messages, err := generateMessages(notificationTable, emailTable)
+	messages, err := generateMessages(notificationTable, emailTable, dateFormatted)
+
 	if err != nil {
 		return err
 	}
@@ -217,9 +226,9 @@ func runNotifier() error {
 // its email address and password from the environment, and uses the credentials
 // to send all of the messages. Returns non-nil error on failure.
 func sendMessages(messages []*mail.Msg) error {
-	notifierEmail := os.Getenv("NOTIFIER_EMAIL")
-	if notifierEmail == "" {
-		return errNoEmail
+	notifierUname := os.Getenv("NOTIFIER_UNAME")
+	if notifierUname == "" {
+		return errNoUname
 	}
 	notifierPassword := os.Getenv("NOTIFIER_PASSWORD")
 	if notifierPassword == "" {
@@ -227,9 +236,10 @@ func sendMessages(messages []*mail.Msg) error {
 	}
 	mailer, err := mail.NewClient(
 		EMAIL_HOST,
-		mail.WithUsername(notifierEmail),
+		mail.WithUsername(notifierUname),
 		mail.WithPassword(notifierPassword),
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithTLSPortPolicy(mail.TLSMandatory),
 	)
 	if err != nil {
 		return err
