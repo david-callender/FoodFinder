@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	docclient "github.com/david-callender/FoodFinder/utils/dineocclient"
@@ -80,10 +81,10 @@ func generateMessages(notificationTable map[int][]mealNotification, emailTable m
 		}
 		message.Subject(NOTIFICATION_SUBJECT)
 		message.SetBulk()
-		messageBody := fmt.Sprintf("Some of your favorite foods are available on %s !\n\n", dateString)
+		messageBody := fmt.Sprintf("Some of your favorite foods are available on %s!\n\n", dateString)
 		for _, notif := range notifs {
 			messageBody += fmt.Sprintf(
-				"- %s at %s during %s time.\n",
+				"- %s at %s during %s time\n",
 				notif.meal,
 				locationIdToName[notif.location],
 				mealtimeIndexer[notif.mealTime],
@@ -107,7 +108,7 @@ func getLocations(siteId string) (map[string]string, error) {
 	}
 	for _, building := range buildings {
 		for _, location := range building.Locations {
-			locationIdToName[location.Id] = location.Name
+			locationIdToName[location.Id] = strings.ReplaceAll(location.Name, " Dining Hall", "")
 		}
 	}
 	return locationIdToName, err
@@ -178,6 +179,7 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 		return err
 	}
 
+	fmt.Println(messages)
 	if err = sendMessages(messages); err != nil {
 		return err
 	}
