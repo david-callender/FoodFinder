@@ -179,7 +179,6 @@ func notifyUsers(conn *pgx.Conn, date time.Time) error {
 		return err
 	}
 
-	fmt.Println(messages)
 	if err = sendMessages(messages); err != nil {
 		return err
 	}
